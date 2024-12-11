@@ -1,5 +1,29 @@
 {
   "dependencies": {
+    "com.lynx.core": {
+      "version": "https://github.com/Lynx-MR/UnitySDK.git?path=/Packages/Core",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.xr.openxr": "1.9.1",
+        "com.unity.textmeshpro": "3.0.6",
+        "com.unity.xr.interaction.toolkit": "3.0.4",
+        "com.unity.xr.hands": "1.4.1"
+      },
+      "hash": "9b8cc825c25624493ad377ccdb7c4ad8e1a11477"
+    },
+    "com.lynx.previews": {
+      "version": "https://github.com/Lynx-MR/UnitySDKPreviews.git?path=/Packages",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.lynx.core": "1.1.3",
+        "com.unity.textmeshpro": "3.0.6",
+        "com.unity.xr.openxr": "1.9.1",
+        "com.unity.xr.interaction.toolkit": "2.5.2"
+      },
+      "hash": "c34b325d1867efee6700a7fac171b34947fd29fa"
+    },
     "com.unity.burst": {
       "version": "1.8.17",
       "depth": 1,
@@ -246,8 +270,8 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.interaction.toolkit": {
-      "version": "3.0.3",
-      "depth": 0,
+      "version": "3.0.4",
+      "depth": 1,
       "source": "registry",
       "dependencies": {
         "com.unity.ugui": "1.0.0",

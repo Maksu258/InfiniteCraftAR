@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 49abdcce8e1d9f043808814f81a24733
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - RGBLeftMaterial: {fileID: 2100000, guid: f57da3b1bb9cb1d40adac130c854d42c, type: 2}
+  - RGBRightMaterial: {fileID: 2100000, guid: 7e8c02d338f745e4fba26b4ff390773d, type: 2}
+  - TrackingLeftMaterial: {fileID: 2100000, guid: 5185b99f0e17f0d4897f129158d54858, type: 2}
+  - TrackingRightMaterial: {fileID: 2100000, guid: c63254e0962388544a94c6b5940e3e16, type: 2}
+  - HandtrackingLeftMaterial: {fileID: 2100000, guid: 4c566c5096f51234481963cc97d81a69, type: 2}
+  - HandtrackingRightMaterial: {fileID: 2100000, guid: ec342fb100858784a81d1999752602f6, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
