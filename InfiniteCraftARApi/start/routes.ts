@@ -8,9 +8,7 @@
 */
 
 import router from '@adonisjs/core/services/router'
+const ModelsController = () => import('#controllers/models_controller')
 
-router.get('/', async () => {
-  return {
-    hello: 'world',
-  }
-})
+router.get('models', [ModelsController, 'index'])
+router.post('models/upload-image', [ModelsController, 'uploadImage'])
