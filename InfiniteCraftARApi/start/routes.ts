@@ -12,3 +12,4 @@ const ModelsController = () => import('#controllers/models_controller')
 
 router.get('models', [ModelsController, 'index'])
 router.post('models/analyze-image', [ModelsController, 'analyzeImage'])
+router.post('models/generate-fusion-word', [ModelsController, 'generateFusionWord'])

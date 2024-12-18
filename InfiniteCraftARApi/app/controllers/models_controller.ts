@@ -3,7 +3,12 @@ import { cuid } from '@adonisjs/core/helpers'
 import type { HttpContext } from '@adonisjs/core/http'
 import drive from '@adonisjs/drive/services/main'
 import AWS from 'aws-sdk'
-import { compareLabels, fetchLabels, getCommonLabelsSummary } from '../utils/utils.js'
+import {
+  compareLabels,
+  fetchLabels,
+  generateFusionWord,
+  getCommonLabelsSummary,
+} from '../utils/utils.js'
 import env from '#start/env'
 export default class ModelsController {
   public async index(ctx: HttpContext) {
@@ -133,5 +138,11 @@ export default class ModelsController {
     const result = getCommonLabelsSummary(commonLabels)
 
     return response.status(200).send(result.slice(0, 2))
+  }
+
+  public async generateFusionWord({ request, response }: HttpContext) {
+    const { word1, word2 } = request.only(['word1', 'word2'])
+    const fusionWord = await generateFusionWord(word1, word2)
+    return response.status(200).send(fusionWord)
   }
 }
