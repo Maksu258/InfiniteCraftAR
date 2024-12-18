@@ -32,32 +32,46 @@ public class AssetListManager : MonoBehaviour
     }
 
 
-        void PopulateAssetList()
+    void PopulateAssetList()
+    {
+        foreach (Asset asset in assets)
         {
-            foreach (Asset asset in assets)
-            {
-                // Instantiate a button from the prefab and parent it to the Content panel
-                GameObject button = Instantiate(assetButtonPrefab, contentPanel);
+            // Instantiate a button from the prefab
+            GameObject button = Instantiate(assetButtonPrefab, contentPanel);
+            button.transform.localScale = Vector3.one;  // Adjust the scale if necessary
 
-                // Ensure the instantiated button scales correctly
-                button.transform.localScale = Vector3.one;
+            // Set the button text to the asset's name
+            Text buttonText = button.GetComponentInChildren<Text>();
+            buttonText.text = asset.name;
 
-                // Set the button's text to the asset's name
-                Text buttonText = button.GetComponentInChildren<Text>();
-                buttonText.text = asset.name;
+            // Debug to check that buttons are being created and listeners added
+            Debug.Log($"Adding listener to button for asset: {asset.name}");
 
-                // Add a click event to load the corresponding model
-                button.GetComponent<Button>().onClick.AddListener(() => OnAssetSelected(asset));
-            }
+            // Add the OnClick listener for the button
+            button.GetComponent<Button>().onClick.AddListener(() => OnAssetSelected(asset));
         }
+    }
 
 
-        void OnAssetSelected(Asset asset)
+
+    public void OnAssetSelected(Asset asset)
     {
         Debug.Log("Selected asset: " + asset.name);
 
-        Instantiate(asset.model, new Vector3(10, 1, 05), Quaternion.identity);
+        Vector3 spawnPosition = Camera.main.transform.position + Camera.main.transform.forward * 1.0f;
+        GameObject instantiatedAsset = Instantiate(asset.model, spawnPosition, Quaternion.identity);
+
+        // Ensure the instantiated model has a Collider
+        if (instantiatedAsset.GetComponent<Collider>() == null)
+        {
+            instantiatedAsset.AddComponent<BoxCollider>();
+        }
+
+        // Add the AssetBehavior script
+        instantiatedAsset.AddComponent<AssetBehavior>();
     }
+
+
 }
 
 // Asset class definition
