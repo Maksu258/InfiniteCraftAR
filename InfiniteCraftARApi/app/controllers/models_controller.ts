@@ -11,7 +11,7 @@ export default class ModelsController {
     return ctx.response.json(models)
   }
 
-  public async uploadImage({ request, response }: HttpContext) {
+  public async analyzeImage({ request, response }: HttpContext) {
     const image = request.file('file', {
       size: '2mb',
       extnames: ['jpeg', 'jpg', 'png'],
@@ -20,12 +20,12 @@ export default class ModelsController {
       return response.badRequest({ error: 'Image missing' })
     }
 
-    const key = `./${cuid()}.${image.extname}`
-    await image.moveToDisk(key, 's3', {
+    const key = `${cuid()}.${image.extname}`
+    await image.moveToDisk(`./${key}`, 's3', {
       contentType: 'image/png',
     })
 
-    const url = await drive.use().getUrl(key)
+    const url = await drive.use().getUrl(`./${key}`)
 
     AWS.config.update({ region: 'us-east-1' })
 
@@ -39,7 +39,7 @@ export default class ModelsController {
       Image: {
         S3Object: {
           Bucket: 'unityinfinitecraftbucket',
-          Name: 'img.jpg',
+          Name: key,
         },
       },
       MaxLabels: 10,
@@ -101,7 +101,7 @@ export default class ModelsController {
 
     const urlApi4Ai = 'https://demo.api4ai.cloud/general-det/v1/results'
     const formData = new FormData()
-    formData.append('url', 'https://unityinfinitecraftbucket.s3.us-east-1.amazonaws.com/img.jpg')
+    formData.append('url', imageUrl)
 
     const api4aiResponse: any = await fetchLabels(urlApi4Ai, {
       method: 'POST',
@@ -132,11 +132,7 @@ export default class ModelsController {
 
     const result = getCommonLabelsSummary(commonLabels)
 
-    // Return the found labels in the response
-    return response.json({
-      url,
-      result,
-    })
+    return response.status(200).send(result.slice(0, 2))
   }
 }
 
@@ -172,35 +168,15 @@ function compareLabels(labels1: any[], labels2: any[], source: any) {
 function getCommonLabelsSummary(
   commonLabels: { source?: any; label1: any; label2: any; similarity?: any }[]
 ) {
-  if (commonLabels.length > 0) {
-    console.log('Éléments communs ou similaires trouvés :')
-    console.table(
-      commonLabels.map(({ source, label1, label2, similarity }) => ({
-        Source: source,
-        Label1: label1,
-        Label2: label2,
-        Similarity: `${similarity}%`,
-      }))
-    )
-
-    const labelCounts: Record<string, number> = {}
-    commonLabels.forEach(({ label1, label2 }) => {
-      ;[label1, label2].forEach((label) => {
-        if (label) {
-          labelCounts[label] = (labelCounts[label] || 0) + 1
-        }
-      })
+  const labelCounts: Record<string, number> = {}
+  commonLabels.forEach(({ label1, label2 }) => {
+    ;[label1, label2].forEach((label) => {
+      if (label) {
+        labelCounts[label] = (labelCounts[label] || 0) + 1
+      }
     })
+  })
 
-    const sortedLabels = Object.entries(labelCounts).sort((a, b) => b[1] - a[1])
-    const topTwoLabels = sortedLabels.slice(0, 2)
-    console.log('Les 2 labels les plus trouvés :')
-    topTwoLabels.forEach(([label, count]) => {
-      console.log(`- "${label}" trouvé ${count} fois`)
-    })
-    return topTwoLabels
-  } else {
-    console.log('Aucune correspondance trouvée.')
-    return []
-  }
+  const sortedLabels = Object.keys(labelCounts).sort((a, b) => labelCounts[b] - labelCounts[a])
+  return sortedLabels
 }
