@@ -3,7 +3,7 @@ import { cuid } from '@adonisjs/core/helpers'
 import type { HttpContext } from '@adonisjs/core/http'
 import drive from '@adonisjs/drive/services/main'
 import AWS from 'aws-sdk'
-import stringSimilarity from 'string-similarity'
+import { compareLabels, fetchLabels, getCommonLabelsSummary } from '../utils/utils.js'
 import env from '#start/env'
 export default class ModelsController {
   public async index(ctx: HttpContext) {
@@ -134,49 +134,4 @@ export default class ModelsController {
 
     return response.status(200).send(result.slice(0, 2))
   }
-}
-
-async function fetchLabels(url: string | URL | Request, options: RequestInit | undefined) {
-  const response = await fetch(url, options)
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`)
-  }
-  return response.json()
-}
-
-function compareLabels(labels1: any[], labels2: any[], source: any) {
-  const similarityThreshold = 0.6
-  const commonLabels: { source: any; label1: any; label2: any; similarity: string }[] = []
-
-  labels1.forEach((label1) => {
-    labels2.forEach((label2) => {
-      const similarity = stringSimilarity.compareTwoStrings(label1, label2)
-      if (similarity >= similarityThreshold) {
-        commonLabels.push({
-          source,
-          label1,
-          label2,
-          similarity: (similarity * 100).toFixed(2),
-        })
-      }
-    })
-  })
-
-  return commonLabels
-}
-
-function getCommonLabelsSummary(
-  commonLabels: { source?: any; label1: any; label2: any; similarity?: any }[]
-) {
-  const labelCounts: Record<string, number> = {}
-  commonLabels.forEach(({ label1, label2 }) => {
-    ;[label1, label2].forEach((label) => {
-      if (label) {
-        labelCounts[label] = (labelCounts[label] || 0) + 1
-      }
-    })
-  })
-
-  const sortedLabels = Object.keys(labelCounts).sort((a, b) => labelCounts[b] - labelCounts[a])
-  return sortedLabels
 }
