@@ -1,23 +1,27 @@
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit.Interactors;
+
 
 public class PinchVizController : MonoBehaviour
 {
     [SerializeField]
-    SkinnedMeshRenderer m_Pointer;
+    SkinnedMeshRenderer m_Pointer; // The visual pointer (blend shape controlled)
 
-    XRRayInteractor m_Interactor;
+    UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor m_Interactor; // The ray interactor component
 
     // Start is called before the first frame update
     void Start()
     {
-        m_Interactor = this.GetComponent<XRRayInteractor>();
+        // Get the XRRayInteractor component attached to this GameObject
+        m_Interactor = this.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        var inputValue = Mathf.Max(m_Interactor.selectInput.ReadValue(), m_Interactor.uiPressInput.ReadValue());
+        // Check if the interactor's "select" interaction is active
+        float inputValue = m_Interactor.isSelectActive ? 1.0f : 0.0f;
+
+        // Update the blend shape weight to visualize pinch strength
         m_Pointer.SetBlendShapeWeight(0, inputValue * 100f);
     }
 }

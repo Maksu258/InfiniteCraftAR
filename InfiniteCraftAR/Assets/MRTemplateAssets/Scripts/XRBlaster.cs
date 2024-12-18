@@ -2,20 +2,18 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.XR.Interaction.Toolkit.Interactables;
-using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 namespace Unity.XRTemplate
 {
     /// <summary>
     /// An interactable that aligns/faces the position of the interactor
     /// </summary>
-    public class XRBlaster : XRGrabInteractable
+    public class XRBlaster : UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable
     {
         [Serializable]
         public class ValueChangeEvent : UnityEvent<float> { }
 
-        IXRSelectInteractor m_Interactor;
+        UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor m_Interactor;
         bool m_Front;
 
         protected override void OnEnable()
