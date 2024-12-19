@@ -3,6 +3,7 @@ import { cuid } from '@adonisjs/core/helpers'
 import type { HttpContext } from '@adonisjs/core/http'
 import drive from '@adonisjs/drive/services/main'
 import AWS from 'aws-sdk'
+import env from '#start/env'
 import {
   compareLabels,
   fetchLabels,
@@ -142,7 +143,24 @@ export default class ModelsController {
 
   public async generateFusionWord({ request, response }: HttpContext) {
     const { word1, word2 } = request.only(['word1', 'word2'])
+
+    if (!word1 || !word2) {
+      return response.status(400).send({ error: 'Missing word parameter' })
+    }
+
     const fusionWord = await generateFusionWord(word1, word2)
     return response.status(200).send(fusionWord)
+  }
+
+  public async get3DObject({ params, response }: HttpContext) {
+    if (!params.word) {
+      return response.status(400).send({ error: 'Missing word parameter' })
+    }
+
+    const model = await Model.findBy('name', decodeURIComponent(params.word))
+    if (model) {
+      return response.status(200).send(model)
+    }
+    return response.status(404).send({ error: 'Model not found' })
   }
 }
