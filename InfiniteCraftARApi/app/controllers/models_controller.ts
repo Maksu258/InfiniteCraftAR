@@ -10,7 +10,6 @@ import {
   generateFusionWord,
   getCommonLabelsSummary,
 } from '../utils/utils.js'
-import env from '#start/env'
 export default class ModelsController {
   public async index(ctx: HttpContext) {
     const models = await Model.all()
