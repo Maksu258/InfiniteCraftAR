@@ -10,6 +10,7 @@ import {
   generateFusionWord,
   getCommonLabelsSummary,
 } from '../utils/utils.js'
+
 export default class ModelsController {
   public async index(ctx: HttpContext) {
     const models = await Model.all()
@@ -156,10 +157,93 @@ export default class ModelsController {
       return response.status(400).send({ error: 'Missing word parameter' })
     }
 
-    const model = await Model.findBy('name', decodeURIComponent(params.word))
+    const decodedWord = decodeURIComponent(params.word)
+    let model = await Model.findBy('name', decodedWord)
     if (model) {
       return response.status(200).send(model)
     }
-    return response.status(404).send({ error: 'Model not found' })
+
+    let headers = { Authorization: `Bearer ${env.get('MESHYAI_API_KEY')}` }
+    const payload = {
+      mode: 'preview',
+      prompt: `a ${decodedWord}`,
+      art_style: 'realistic',
+      should_remesh: true,
+    }
+
+    let modelTaskId = null
+
+    try {
+      const response = await fetch('https://api.meshy.ai/openapi/v2/text-to-3d', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify(payload),
+      })
+      const data = (await response.json()) as { result: string }
+      modelTaskId = data.result
+    } catch (error) {
+      console.error(error)
+    }
+
+    if (!modelTaskId) {
+      return response.status(404).send({ error: 'Model not found' })
+    }
+
+    headers = { Authorization: `Bearer ${env.get('MESHYAI_API_KEY')}` }
+    let modelUrls = null
+
+    while (true) {
+      try {
+        const response = await fetch(`https://api.meshy.ai/openapi/v2/text-to-3d/${modelTaskId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...headers,
+          },
+        })
+        const data: any = await response.json()
+
+        if (data.progress === 100) {
+          modelUrls = data.model_urls
+          break
+        }
+      } catch (error) {
+        console.error(error)
+        break
+      }
+    }
+
+    if (!modelUrls) {
+      return response.status(404).send({ error: 'Model not found' })
+    }
+
+    const objUrl = modelUrls.obj
+    const objResponse = await fetch(objUrl)
+    const objBuffer = await objResponse.arrayBuffer()
+    const objKey = `${cuid()}.obj`
+
+    try {
+      await drive.use('s3').put(objKey, Buffer.from(objBuffer), {
+        visibility: 'public',
+        contentType: 'application/octet-stream',
+      })
+
+      console.log('File uploaded successfully to S3:', objKey)
+    } catch (error) {
+      console.error('Error uploading file to S3:', error)
+      return response.status(500).send({ error: 'Error uploading file to S3' })
+    }
+
+    const s3ObjUrl = await drive.use().getUrl(`./${objKey}`)
+
+    model = await Model.create({
+      name: decodedWord,
+      modelUrl: s3ObjUrl,
+    })
+
+    return response.status(200).send(model.toJSON())
   }
 }
