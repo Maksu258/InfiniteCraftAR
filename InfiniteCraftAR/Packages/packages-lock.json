@@ -12,6 +12,18 @@
       },
       "hash": "458c96e89cbe7df68e5f2440b8a53e95bd3f3c79"
     },
+    "com.lynx.previews": {
+      "version": "https://github.com/Lynx-MR/UnitySDKPreviews.git?path=/Packages",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.lynx.core": "1.2.0",
+        "com.unity.textmeshpro": "3.0.6",
+        "com.unity.xr.openxr": "1.9.1",
+        "com.unity.xr.interaction.toolkit": "3.0.4"
+      },
+      "hash": "acea59aada367e9a992ebb72c50b0e5d3a9e8209"
+    },
     "com.unity.burst": {
       "version": "1.8.17",
       "depth": 1,
@@ -144,7 +156,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.textmeshpro": {
-      "version": "3.0.8",
+      "version": "3.0.9",
       "depth": 0,
       "source": "registry",
       "dependencies": {
