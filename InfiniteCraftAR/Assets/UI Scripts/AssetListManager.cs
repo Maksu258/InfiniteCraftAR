@@ -43,4 +43,6 @@ public class AssetListManager : MonoBehaviour
         GameObject instantiatedAsset = Instantiate(asset.model, spawnPosition, Quaternion.identity);
         instantiatedAsset.AddComponent<AssetBehavior>();
     }
+
+
 }
