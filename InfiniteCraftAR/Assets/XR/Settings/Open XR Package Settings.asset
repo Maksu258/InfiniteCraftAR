@@ -432,6 +432,32 @@ MonoBehaviour:
   company: Unity
   priority: 0
   required: 0
+--- !u!114 &-6035287277870501693
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e068f7c0f1a950f41a559a42c84d6562, type: 3}
+  m_Name: LynxR1Feature Android
+  m_EditorClassIdentifier: 
+  m_enabled: 1
+  nameUi: Lynx-R1
+  version: 1.2.0
+  featureIdInternal: com.lynx.openxr.feature
+  openxrExtensionStrings: 
+  company: Lynx
+  priority: 0
+  required: 0
+  startInAR: 1
+  DisableBackgroundInAR: 1
+  onlyVRLayer: 10
+  onlyARLayer: 11
+  VisibleInFullARTag: FullARObject
+  m_unpremultipliedAlphaFlag: 1
 --- !u!114 &-5941725581135416239
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -776,6 +802,32 @@ MonoBehaviour:
   company: Unity Technologies
   priority: 0
   required: 0
+--- !u!114 &-2646537831143077204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e068f7c0f1a950f41a559a42c84d6562, type: 3}
+  m_Name: LynxR1Feature Android
+  m_EditorClassIdentifier: 
+  m_enabled: 0
+  nameUi: 
+  version: 
+  featureIdInternal: 
+  openxrExtensionStrings: 
+  company: 
+  priority: 0
+  required: 0
+  startInAR: 1
+  DisableBackgroundInAR: 1
+  onlyVRLayer: 10
+  onlyARLayer: 11
+  VisibleInFullARTag: FullARObject
+  m_unpremultipliedAlphaFlag: 1
 --- !u!114 &-2446982117346300164
 MonoBehaviour:
   m_ObjectHideFlags: 0
