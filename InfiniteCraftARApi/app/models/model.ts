@@ -11,6 +11,9 @@ export default class Model extends BaseModel {
   @column()
   declare modelUrl: string
 
+  @column()
+  declare textureUrl: string
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

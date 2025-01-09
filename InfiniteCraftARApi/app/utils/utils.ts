@@ -29,6 +29,57 @@ export function compareLabels(labels1: any[], labels2: any[], source: any) {
   return commonLabels
 }
 
+export function countLabelOccurrences(
+  rekognitionLabels: any[],
+  clarifaiLabels: any[],
+  foundLabels: any[]
+) {
+  const allLabels = [...rekognitionLabels, ...clarifaiLabels, ...foundLabels]
+  const groupedLabels: Record<string, number> = {}
+
+  // Trouver ou créer un groupe pour un label
+  function findOrCreateGroup(label: string) {
+    let bestMatch = null
+    let highestScore = 0
+
+    // Cherche le groupe avec la meilleure similarité
+    for (const group in groupedLabels) {
+      const similarity = stringSimilarity.compareTwoStrings(group, label)
+      if (similarity > 0.66 && similarity > highestScore) {
+        highestScore = similarity
+        bestMatch = group
+      }
+    }
+
+    return bestMatch
+  }
+
+  // Vérifie si un label est contenu dans un groupe
+  function findContainedGroup(label: string) {
+    for (const group in groupedLabels) {
+      if (group.includes(label) || label.includes(group)) {
+        return group
+      }
+    }
+    return null
+  }
+
+  allLabels.forEach((label) => {
+    const group = findOrCreateGroup(label) || findContainedGroup(label)
+    if (group) {
+      groupedLabels[group] += 1 // Incrémenter le compteur du groupe trouvé
+    } else {
+      groupedLabels[label] = 1 // Créer un nouveau groupe avec un compteur
+    }
+  })
+
+  const sortedLabels = Object.keys(groupedLabels).sort(
+    (a, b) => groupedLabels[b] - groupedLabels[a]
+  )
+
+  return sortedLabels
+}
+
 export function getCommonLabelsSummary(
   commonLabels: { source?: any; label1: any; label2: any; similarity?: any }[]
 ) {
