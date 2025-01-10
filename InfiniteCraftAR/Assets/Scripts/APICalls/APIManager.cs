@@ -186,7 +186,7 @@ public class APIManager : MonoBehaviour
         else
         {
             StartCoroutine(DownloadObjFromUrlRequest(furniture.modelUrl, furniture.name, ".mtl"));
-            StartCoroutine(DownloadObjFromUrlRequest(furniture.modelUrl, furniture.name, ".jpg"));
+            StartCoroutine(DownloadObjFromUrlRequest(furniture.pngUrl, furniture.name, ".png"));
             instantiate3DObj(Application.dataPath + "/Objects/" + furniture.name + ".obj");
         }
         
