@@ -12,6 +12,7 @@ import {
   fetchLabels,
   generateFusionWord,
   getCommonLabelsSummary,
+  retrieve3dTask,
 } from '../utils/utils.js'
 
 export default class ModelsController {
@@ -235,7 +236,7 @@ export default class ModelsController {
     const objUrl = modelUrls.obj
     const objResponse = await fetch(objUrl)
     const objBuffer = await objResponse.arrayBuffer()
-    const objKey = `${cuid()}.obj`
+    const objKey = `${decodedWord}-${cuid()}.obj`
 
     try {
       await drive.use('s3').put(objKey, Buffer.from(objBuffer), {
@@ -254,14 +255,13 @@ export default class ModelsController {
     logger.info('Creating texture for model: ' + decodedWord)
     let textureId = null
     const texturePayload = {
-      model_url: modelUrls.obj,
-      object_prompt: decodedWord,
-      style_prompt: 'a cartoon like texture',
-      art_style: 'cartoon-line-art',
+      mode: 'refine',
+      preview_task_id: modelTaskId,
+      enable_pbr: true,
     }
 
     try {
-      const textureResponse = await fetch('https://api.meshy.ai/openapi/v1/text-to-texture', {
+      const textureResponse = await fetch('https://api.meshy.ai/openapi/v2/text-to-3d', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -272,8 +272,6 @@ export default class ModelsController {
 
       const textureData = (await textureResponse.json()) as { result: string }
       textureId = textureData.result
-      console.log('textureId', textureId)
-      console.log('textureData', textureData)
     } catch (error) {
       logger.error('Error fetching texture for model: ' + decodedWord, error)
       return response.status(500).send({ error: 'Error fetching texture' })
@@ -282,7 +280,7 @@ export default class ModelsController {
     model = await Model.create({
       name: decodedWord,
       modelUrl: s3ObjUrl,
-      textureUrl: textureId,
+      mtlUrl: textureId,
     })
 
     logger.info('Model created successfully for model: ' + decodedWord, model.toJSON())
@@ -301,60 +299,57 @@ export default class ModelsController {
       return response.status(404).send({ error: 'Model not found' })
     }
 
-    const textureUrl = model.textureUrl
     const regex = /^\d/
 
-    if (!regex.test(textureUrl)) {
-      logger.info('Texture already generated for model: ' + params.id)
-      return response.status(200).send({ textureUrl })
+    if (!regex.test(model.mtlUrl)) {
+      logger.info('Texture already generated for model: ' + params.id + '(' + model.name + ')')
+      return response.status(200).send(model.toJSON())
     }
 
-    const taskId = textureUrl
-    const headers = { Authorization: `Bearer ${env.get('MESHYAI_API_KEY')}` }
-    let textureData = null
+    const taskId = model.mtlUrl
 
-    logger.info('Waiting for texture to be ready for model: ' + params.id)
-    while (true) {
-      try {
-        const apiResponse = await fetch(
-          `https://api.meshy.ai/openapi/v1/text-to-texture/${taskId}`,
-          {
-            method: 'GET',
-            headers: headers,
-          }
-        )
-        textureData = (await apiResponse.json()) as { progress: number; texture_urls: any[] }
+    logger.info('Waiting for texture to be ready for model: ' + params.id + '(' + model.name + ')')
+    const apiResponse = await retrieve3dTask(taskId)
+    const mtlUrl = apiResponse.model_urls.mtl
+    const pngUrl = apiResponse.texture_urls[0].base_color
 
-        if (textureData.progress === 100) {
-          logger.info('Texture ready for model: ' + params.id)
-          break
-        }
-      } catch (error) {
-        logger.error('Error fetching texture data for model: ' + params.id, error)
-        return response.status(500).send({ error: 'Error fetching texture data' })
-      }
-    }
+    const mtlResponse = await fetch(mtlUrl)
+    const mtlBuffer = await mtlResponse.arrayBuffer()
+    const mtlKey = `${model.name}-${cuid()}.mtl`
 
-    console.log('textureData', textureData)
-    const normalTextureUrl = textureData.texture_urls[0].normal
-    const textureResponse = await fetch(normalTextureUrl)
-    const textureBuffer = await textureResponse.arrayBuffer()
-    const textureKey = `${cuid()}.png`
+    const pngResponse = await fetch(pngUrl)
+    const pngBuffer = await pngResponse.arrayBuffer()
+    const pngKey = `${model.name}-${cuid()}.png`
 
     try {
-      logger.info('Uploading texture to S3 for model: ' + params.id)
-      await drive.use('s3').put(textureKey, Buffer.from(textureBuffer), {
+      logger.info('Uploading mtl and png to S3 for model: ' + params.id + '(' + model.name + ')')
+      await drive.use('s3').put(mtlKey, Buffer.from(mtlBuffer), {
+        visibility: 'public',
+        contentType: 'text/plain',
+      })
+      await drive.use('s3').put(pngKey, Buffer.from(pngBuffer), {
         visibility: 'public',
         contentType: 'image/png',
       })
 
-      const s3TextureUrl = await drive.use().getUrl(`./${textureKey}`)
-      logger.info('Texture uploaded successfully to S3 for model: ' + params.id, s3TextureUrl)
-      model.textureUrl = s3TextureUrl
+      const s3MtlUrl = await drive.use().getUrl(`./${mtlKey}`)
+      const s3PngUrl = await drive.use().getUrl(`./${pngKey}`)
+      logger.info(
+        'MTL and PNG uploaded successfully to S3 for model: ' + params.id + '(' + model.name + ')',
+        {
+          s3MtlUrl,
+          s3PngUrl,
+        }
+      )
+      model.mtlUrl = s3MtlUrl
+      model.pngUrl = s3PngUrl
       await model.save()
-      return response.status(200).send({ textureUrl: s3TextureUrl })
+      return response.status(200).send(model.toJSON())
     } catch (error) {
-      logger.error('Error uploading texture to S3 for model: ' + params.id, error)
+      logger.error(
+        'Error uploading texture to S3 for model: ' + params.id + '(' + model.name + ')',
+        error
+      )
       return response.status(500).send({ error: 'Error uploading texture to S3' })
     }
   }

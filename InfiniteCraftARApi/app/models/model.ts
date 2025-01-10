@@ -12,7 +12,10 @@ export default class Model extends BaseModel {
   declare modelUrl: string
 
   @column()
-  declare textureUrl: string
+  declare mtlUrl: string
+
+  @column()
+  declare pngUrl: string
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

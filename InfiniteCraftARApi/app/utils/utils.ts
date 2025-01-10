@@ -1,4 +1,5 @@
 import stringSimilarity from 'string-similarity'
+import env from '#start/env'
 
 export async function fetchLabels(url: string | URL | Request, options: RequestInit | undefined) {
   const response = await fetch(url, options)
@@ -112,4 +113,30 @@ export async function generateFusionWord(word1: string, word2: string) {
     console.error('Erreur lors de la requête :', error)
     throw error
   }
+}
+
+export async function retrieve3dTask(taskId: string) {
+  let taskResults: any
+  while (true) {
+    try {
+      const response = await fetch(`https://api.meshy.ai/openapi/v2/text-to-3d/${taskId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${env.get('MESHYAI_API_KEY')}`,
+        },
+      })
+      const data: any = await response.json()
+
+      if (data.progress === 100) {
+        taskResults = data
+        break
+      }
+    } catch (error) {
+      console.error(error)
+      break
+    }
+  }
+
+  return taskResults
 }
