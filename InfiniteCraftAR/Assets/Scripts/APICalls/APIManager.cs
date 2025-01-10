@@ -241,7 +241,7 @@ public class APIManager : MonoBehaviour
         }
         else
         {
-            StartCoroutine(DownloadObjFromUrlRequest(furniture.modelUrl, furniture.name, ".jpg"));
+            StartCoroutine(DownloadObjFromUrlRequest(furniture.pngUrl, furniture.name, ".jpg"));
         }
 
 
