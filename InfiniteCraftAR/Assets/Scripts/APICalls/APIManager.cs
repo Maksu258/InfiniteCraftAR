@@ -69,7 +69,11 @@ public class APIManager : MonoBehaviour
 
         TaskID taskId = JsonUtility.FromJson<TaskID>(JsonUtility.ToJson(taskID));
         Debug.Log(taskId.result);
-        StartCoroutine(postAnalyzeImage(apiUrl, imgPath));
+
+        //StartCoroutine(postAnalyzeImage(apiUrl, imgPath));
+
+        string[] array = { "computer", "glass" };
+        StartCoroutine(generateFusionWord(apiUrl, array));
     }
 
     IEnumerator postAnalyzeImage(string url, string imagePath, string alreadyKnownObject = null)
@@ -170,7 +174,9 @@ public class APIManager : MonoBehaviour
 
         Debug.Log("get3DObject : " + data);
 
-        generatedObject furniture = JsonUtility.FromJson<generatedObject>(data);
+        string cleanedJson = data.Replace("\n", "").Replace("\t", "").Trim();
+
+        generatedObject furniture = JsonUtility.FromJson<generatedObject>(cleanedJson);
 
         StartCoroutine(DownloadObjFromUrlRequest(furniture.modelUrl, furniture.name, ".obj"));
         if(furniture.mtlUrl == null || furniture.mtlUrl == "" || furniture.pngUrl == null || furniture.pngUrl == "")
@@ -195,11 +201,13 @@ public class APIManager : MonoBehaviour
     IEnumerator getTexture(string url, int id)
     {
         // Configurer la requête
-        UnityWebRequest request = new UnityWebRequest(url + "getTexture/" + id, "GET");
+        UnityWebRequest request = new UnityWebRequest(url + "get-texture/" + id, "GET");
 
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
         request.SetRequestHeader("Authorization", "Bearer " + apiKey);
+
+        request.timeout = 1000000;
 
         //Debug.Log("En-têtes : Content-Type: application/json, Authorization: Bearer " + apiKey);
 
@@ -215,7 +223,9 @@ public class APIManager : MonoBehaviour
         string data = request.downloadHandler.text;
         Debug.Log("getTexture : " + data);
 
-        generatedObject furniture = JsonUtility.FromJson<generatedObject>(data);
+        string cleanedJson = data.Replace("\n", "").Replace("\t", "").Trim();
+
+        generatedObject furniture = JsonUtility.FromJson<generatedObject>(cleanedJson);
         
         if (furniture.mtlUrl == null || furniture.mtlUrl == "")
         {
@@ -275,7 +285,7 @@ public class APIManager : MonoBehaviour
     void instantiate3DObj(string objPath, string mtlPath = null)
     {
         // Vérifier si l'objet existe déjà dans la scène
-        string objectName = objPath.Substring(objPath.LastIndexOf("/") + 1); // Récupérer le nom de l'objet à partir du chemin du fichier
+        string objectName = Path.GetFileNameWithoutExtension(objPath);
         GameObject existingObj = GameObject.Find(objectName);
 
         if (existingObj != null)
@@ -287,7 +297,6 @@ public class APIManager : MonoBehaviour
         var loadedObj = new OBJLoader().Load(objPath, mtlPath);
         if (loadedObj != null)
         {
-            Instantiate(loadedObj);
             Debug.Log("Objet 3D instancié : " + objectName);
         }
         else
