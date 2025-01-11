@@ -1,5 +1,6 @@
 import stringSimilarity from 'string-similarity'
 import env from '#start/env'
+import Model from '#models/model'
 
 export async function fetchLabels(url: string | URL | Request, options: RequestInit | undefined) {
   const response = await fetch(url, options)
@@ -115,28 +116,50 @@ export async function generateFusionWord(word1: string, word2: string) {
   }
 }
 
-export async function retrieve3dTask(taskId: string) {
+export async function retrieve3dTask(taskId: string, headers: any) {
   let taskResults: any
-  while (true) {
+  let progress = 0
+  do {
     try {
       const response = await fetch(`https://api.meshy.ai/openapi/v2/text-to-3d/${taskId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${env.get('MESHYAI_API_KEY')}`,
+          ...headers,
         },
       })
       const data: any = await response.json()
-
       if (data.progress === 100) {
         taskResults = data
         break
+      } else if (data.status === 'FAILED') {
+        throw new Error('Task failed')
       }
+
+      progress = data.progress
     } catch (error) {
       console.error(error)
       break
     }
-  }
+    await new Promise((resolve) => setTimeout(resolve, 10000))
+  } while (progress < 100)
 
   return taskResults
+}
+
+export async function keyToUse(id?: number) {
+  const keys = [
+    env.get('MESHYAI_API_KEY'),
+    env.get('MESHYAI_API_KEY2'),
+    env.get('MESHYAI_API_KEY3'),
+    env.get('MESHYAI_API_KEY4'),
+    env.get('MESHYAI_API_KEY5'),
+  ]
+  if (id) {
+    return keys[id % 5]
+  } else {
+    const lastModel = await Model.query().orderBy('id', 'desc').first()
+    const lastId = lastModel ? lastModel.id + 1 : 1
+    return keys[lastId % 5]
+  }
 }

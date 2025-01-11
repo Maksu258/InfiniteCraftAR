@@ -12,6 +12,7 @@ import {
   fetchLabels,
   generateFusionWord,
   getCommonLabelsSummary,
+  keyToUse,
   retrieve3dTask,
 } from '../utils/utils.js'
 
@@ -143,6 +144,7 @@ export default class ModelsController {
 
     // const result = getCommonLabelsSummary(commonLabels)
     const result = countLabelOccurrences(rekognitionLabels, clarifaiLabels, api4aiLabels)
+    logger.info('Result', result)
     return response.status(200).send(result.slice(0, 2))
   }
 
@@ -172,7 +174,7 @@ export default class ModelsController {
 
     logger.info('Creating 3D object for model: ' + decodedWord)
 
-    let headers = { Authorization: `Bearer ${env.get('MESHYAI_API_KEY')}` }
+    const headers = { Authorization: `Bearer ${await keyToUse()}` }
     const payload = {
       mode: 'preview',
       prompt: `a ${decodedWord}`,
@@ -191,6 +193,8 @@ export default class ModelsController {
         },
         body: JSON.stringify(payload),
       })
+
+      console.log('response', response)
       const data = (await response.json()) as { result: string }
       modelTaskId = data.result
     } catch (error) {
@@ -203,29 +207,14 @@ export default class ModelsController {
     }
 
     console.log('modelTaskId', modelTaskId)
-    headers = { Authorization: `Bearer ${env.get('MESHYAI_API_KEY')}` }
     let modelUrls = null
 
     logger.info('Waiting for model to be ready for model: ' + decodedWord)
-    while (true) {
-      try {
-        const response = await fetch(`https://api.meshy.ai/openapi/v2/text-to-3d/${modelTaskId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            ...headers,
-          },
-        })
-        const data: any = await response.json()
-
-        if (data.progress === 100) {
-          modelUrls = data.model_urls
-          break
-        }
-      } catch (error) {
-        console.error(error)
-        break
-      }
+    try {
+      const data = await retrieve3dTask(modelTaskId, headers)
+      modelUrls = data.model_urls
+    } catch (error) {
+      console.error(error)
     }
 
     if (!modelUrls) {
@@ -265,7 +254,7 @@ export default class ModelsController {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${env.get('MESHYAI_API_KEY')}`,
+          ...headers,
         },
         body: JSON.stringify(texturePayload),
       })
@@ -309,7 +298,8 @@ export default class ModelsController {
     const taskId = model.mtlUrl
 
     logger.info('Waiting for texture to be ready for model: ' + params.id + '(' + model.name + ')')
-    const apiResponse = await retrieve3dTask(taskId)
+    let headers = { Authorization: `Bearer ${await keyToUse(model.id)}` }
+    const apiResponse = await retrieve3dTask(taskId, headers)
     const mtlUrl = apiResponse.model_urls.mtl
     const pngUrl = apiResponse.texture_urls[0].base_color
 
