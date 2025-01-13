@@ -151,11 +151,14 @@ export default class ModelsController {
   public async generateFusionWord({ request, response }: HttpContext) {
     const { word1, word2 } = request.only(['word1', 'word2'])
 
+    logger.info('Generating fusion word for ' + word1 + ' and ' + word2)
     if (!word1 || !word2) {
+      logger.error('Missing word parameter')
       return response.status(400).send({ error: 'Missing word parameter' })
     }
 
     const fusionWord = await generateFusionWord(word1, word2)
+    logger.info('Fusion word generated : ' + fusionWord)
     return response.status(200).send(fusionWord)
   }
 

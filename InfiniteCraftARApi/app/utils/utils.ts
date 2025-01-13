@@ -1,6 +1,7 @@
 import stringSimilarity from 'string-similarity'
 import env from '#start/env'
 import Model from '#models/model'
+import logger from '@adonisjs/core/services/logger'
 
 export async function fetchLabels(url: string | URL | Request, options: RequestInit | undefined) {
   const response = await fetch(url, options)
@@ -107,11 +108,15 @@ export async function generateFusionWord(word1: string, word2: string) {
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`)
     }
+    if (response == null) {
+      logger.info('No fusion for ' + word1 + ' and ' + word2)
+      return null
+    }
 
     const data: any = await response.json()
     return data.result
   } catch (error) {
-    console.error('Erreur lors de la requête :', error)
+    logger.error('Error generating fusion word', error)
     throw error
   }
 }
@@ -137,8 +142,9 @@ export async function retrieve3dTask(taskId: string, headers: any) {
       }
 
       progress = data.progress
+      logger.info('Task progress : ' + progress + '%')
     } catch (error) {
-      console.error(error)
+      logger.error('Error retrieving 3d task', error)
       break
     }
     await new Promise((resolve) => setTimeout(resolve, 10000))
