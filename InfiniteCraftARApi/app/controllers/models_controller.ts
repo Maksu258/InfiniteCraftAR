@@ -225,18 +225,25 @@ export default class ModelsController {
       return response.status(404).send({ error: 'Create model failed, modelUrls not found' })
     }
 
+    const lastModel = await Model.query().orderBy('id', 'desc').first()
+    const newId = lastModel ? lastModel.id + 1 : 1
+
     const objUrl = modelUrls.obj
     const objResponse = await fetch(objUrl)
     const objBuffer = await objResponse.arrayBuffer()
-    const objKey = `${decodedWord}-${cuid()}.obj`
+    const objKey = `${decodedWord}-${newId}.obj`
 
     try {
-      await drive.use('s3').put(objKey, Buffer.from(objBuffer), {
-        visibility: 'public',
-        contentType: 'application/octet-stream',
-      })
-
-      logger.info('File uploaded successfully to S3 for model: ' + decodedWord, objKey)
+      const existingObjUrl = await drive.use('s3').exists(objKey)
+      if (existingObjUrl) {
+        logger.info('OBJ already exists on S3 for model: ' + decodedWord, objKey)
+      } else {
+        await drive.use('s3').put(objKey, Buffer.from(objBuffer), {
+          visibility: 'public',
+          contentType: 'application/octet-stream',
+        })
+        logger.info('File uploaded successfully to S3 for model: ' + decodedWord, objKey)
+      }
     } catch (error) {
       logger.error('Error uploading file to S3 for model: ' + decodedWord, error)
       return response.status(500).send({ error: 'Error uploading file to S3' })
@@ -308,36 +315,53 @@ export default class ModelsController {
 
     const mtlResponse = await fetch(mtlUrl)
     const mtlBuffer = await mtlResponse.arrayBuffer()
-    const mtlKey = `${model.name}-${cuid()}.mtl`
+    const mtlKey = `${model.name}-${model.id}.mtl`
 
     const pngResponse = await fetch(pngUrl)
     const pngBuffer = await pngResponse.arrayBuffer()
-    const pngKey = `${model.name}-${cuid()}.png`
+    const pngKey = `${model.name}-${model.id}.png`
 
     try {
-      logger.info('Uploading mtl and png to S3 for model: ' + params.id + '(' + model.name + ')')
-      await drive.use('s3').put(mtlKey, Buffer.from(mtlBuffer), {
-        visibility: 'public',
-        contentType: 'text/plain',
-      })
-      await drive.use('s3').put(pngKey, Buffer.from(pngBuffer), {
-        visibility: 'public',
-        contentType: 'image/png',
-      })
+      const existingMtlUrl = await drive.use('s3').exists(mtlKey)
+      const existingPngUrl = await drive.use('s3').exists(pngKey)
 
-      const s3MtlUrl = await drive.use().getUrl(`./${mtlKey}`)
-      const s3PngUrl = await drive.use().getUrl(`./${pngKey}`)
-      logger.info(
-        'MTL and PNG uploaded successfully to S3 for model: ' + params.id + '(' + model.name + ')',
-        {
-          s3MtlUrl,
-          s3PngUrl,
-        }
-      )
-      model.mtlUrl = s3MtlUrl
-      model.pngUrl = s3PngUrl
-      await model.save()
-      return response.status(200).send(model.toJSON())
+      if (existingMtlUrl && existingPngUrl) {
+        logger.info(
+          'MTL and PNG already exist on S3 for model: ' + params.id + '(' + model.name + ')'
+        )
+        model.mtlUrl = await drive.use().getUrl(`./${mtlKey}`)
+        model.pngUrl = await drive.use().getUrl(`./${pngKey}`)
+        await model.save()
+        return response.status(200).send(model.toJSON())
+      } else {
+        logger.info('Uploading mtl and png to S3 for model: ' + params.id + '(' + model.name + ')')
+        await drive.use('s3').put(mtlKey, Buffer.from(mtlBuffer), {
+          visibility: 'public',
+          contentType: 'text/plain',
+        })
+        await drive.use('s3').put(pngKey, Buffer.from(pngBuffer), {
+          visibility: 'public',
+          contentType: 'image/png',
+        })
+
+        const s3MtlUrl = await drive.use().getUrl(`./${mtlKey}`)
+        const s3PngUrl = await drive.use().getUrl(`./${pngKey}`)
+        logger.info(
+          'MTL and PNG uploaded successfully to S3 for model: ' +
+            params.id +
+            '(' +
+            model.name +
+            ')',
+          {
+            s3MtlUrl,
+            s3PngUrl,
+          }
+        )
+        model.mtlUrl = s3MtlUrl
+        model.pngUrl = s3PngUrl
+        await model.save()
+        return response.status(200).send(model.toJSON())
+      }
     } catch (error) {
       logger.error(
         'Error uploading texture to S3 for model: ' + params.id + '(' + model.name + ')',
