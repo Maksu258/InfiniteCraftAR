@@ -58,7 +58,7 @@ public class AssetListManager : MonoBehaviour
     {
         Debug.Log("Selected asset: " + asset.name);
 
-        Vector3 spawnPosition = Camera.main.transform.position + Camera.main.transform.forward * 1.0f;
+        Vector3 spawnPosition = new Vector3(-94f, -91f, 300f);
         GameObject instantiatedAsset = Instantiate(asset.model, spawnPosition, Quaternion.identity);
 
         // Ensure the instantiated model has a Collider
@@ -66,6 +66,13 @@ public class AssetListManager : MonoBehaviour
         {
             instantiatedAsset.AddComponent<BoxCollider>();
         }
+        Rigidbody rb = instantiatedAsset.GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            rb = instantiatedAsset.AddComponent<Rigidbody>(); // Add Rigidbody if it doesn't exist
+        }
+        rb.useGravity = false;  // Disable gravity explicitly
+        rb.isKinematic = false; // Allow manual movement or physics without gravity
 
         // Add the AssetBehavior script
         instantiatedAsset.AddComponent<AssetBehavior>();
@@ -80,14 +87,13 @@ public class Asset
 {
     public string name;      // Name of the asset
     public string link;      // URL or link to an external resource
-    public bool permanent;   // Indicates if the asset is permanent
+
     public GameObject model; // The actual 3D model
 
     public Asset(string name, string link, bool permanent, GameObject model)
     {
         this.name = name;
         this.link = link;
-        this.permanent = permanent;
         this.model = model;
     }
 }
