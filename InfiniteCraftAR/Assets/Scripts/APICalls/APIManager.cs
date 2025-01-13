@@ -45,17 +45,14 @@ public class APIManager : MonoBehaviour
 
     private string apiUrl = "http://51.178.83.2/models/";
     private TaskID taskID = new TaskID { result ="0193da09-6ca8-7441-8f2d-2e6dec62f401" };
-    private string imgPath = Application.dataPath + "/TestRessources/img.jpg";
-
-    private string urlObj = "";
-    private string apiKey = "";
+    private string imgPath = Application.dataPath + "/TestRessources/img.jpg"; // test image path
 
     private string WrapJson(string jsonArray)
     {
         return "{\"items\":" + jsonArray + "}";
     }
 
-    // Cette fonction permet de charger et d'ajouter une texture à un objet 3D passé en paramètre
+
     public void AddTextureToObject(GameObject targetObject, string texturePath)
     {
         // Charger la texture depuis le chemin donné
@@ -106,62 +103,15 @@ public class APIManager : MonoBehaviour
         return texture;
     }
 
-
-    /// <summary>
-    /// Modifie un fichier .obj pour remplacer le mtllib et le usemtl.
-    /// </summary>
-    /// <param name="filePath">Chemin du fichier .obj à modifier.</param>
-    /// <param name="mtlFileName">Nouveau nom du fichier .mtl.</param>
-    /// <param name="materialName">Nouveau nom du matériau utilisé (usemtl).</param>
-    public static void CleanAndFixObjFile(string filePath, string mtlFileName, string materialName)
+    public void analyzeImage(string imagePath)
     {
-        if (!File.Exists(filePath))
-        {
-            UnityEngine.Debug.LogError($"Le fichier .obj n'existe pas : {filePath}");
-            return;
-        }
-
-        string tempFilePath = filePath + ".tmp"; // Chemin pour le fichier temporaire.
-
-        try
-        {
-            using (StreamReader reader = new StreamReader(filePath))
-            using (StreamWriter writer = new StreamWriter(tempFilePath))
-            {
-                string line;
-
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (line.StartsWith("mtllib "))
-                    {
-                        writer.WriteLine($"mtllib {mtlFileName+".mtl"}");
-                    }
-                    else if (line.StartsWith("o "))
-                    {
-                        writer.WriteLine("usemtl Material.001");
-                    }
-                    else
-                    {
-                        writer.WriteLine(line);
-                    }
-                }
-            }
-
-            // Remplace l'ancien fichier par le nouveau.
-            File.Delete(filePath);
-            File.Move(tempFilePath, filePath);
-
-            UnityEngine.Debug.Log($"Fichier .obj modifié avec succès : {filePath}");
-        }
-        catch (System.Exception ex)
-        {
-            UnityEngine.Debug.LogError($"Erreur lors de la modification du fichier .obj : {ex.Message}");
-            // Supprime le fichier temporaire en cas d'échec.
-            if (File.Exists(tempFilePath))
-                File.Delete(tempFilePath);
-        }
+        StartCoroutine(postAnalyzeImage(apiUrl, imgPath));
     }
 
+    public void generateFusionObject(string[] words)
+    {
+        StartCoroutine(generateFusionWord(apiUrl, words));
+    }
 
     void Start()
     {
@@ -177,11 +127,13 @@ public class APIManager : MonoBehaviour
         TaskID taskId = JsonUtility.FromJson<TaskID>(JsonUtility.ToJson(taskID));
         Debug.Log(taskId.result);*/
 
-        StartCoroutine(postAnalyzeImage(apiUrl, imgPath));
-        /*
-        string[] array = { "tower", "water" };
-        StartCoroutine(generateFusionWord(apiUrl, array));
-        */
+
+        // Generate with personalized words
+        string[] array = { "plane", "whale" };
+        generateFusionObject(array);
+
+        // Generate with a screenshot
+        analyzeImage(imgPath);
     }
 
     IEnumerator postAnalyzeImage(string url, string imagePath, string alreadyKnownObject = null)
@@ -265,9 +217,8 @@ public class APIManager : MonoBehaviour
 
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
-        request.SetRequestHeader("Authorization", "Bearer " + apiKey);
 
-        //Debug.Log("En-têtes : Content-Type: application/json, Authorization: Bearer " + apiKey);
+        request.timeout = 10000000;
 
         // Envoyer la requête
         yield return request.SendWebRequest();
@@ -320,9 +271,8 @@ public class APIManager : MonoBehaviour
 
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
-        request.SetRequestHeader("Authorization", "Bearer " + apiKey);
 
-        request.timeout = 1000000;
+        request.timeout = 10000000;
 
         //Debug.Log("En-têtes : Content-Type: application/json, Authorization: Bearer " + apiKey);
 
@@ -389,8 +339,6 @@ public class APIManager : MonoBehaviour
 
         if (extention == ".obj" && GameObject.Find(name) == null)
         {
-
-            CleanAndFixObjFile(write_path, name, name);
             instantiate3DObj(write_path);
         }
         Debug.Log(request.downloadHandler.text);
