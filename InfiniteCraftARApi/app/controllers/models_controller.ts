@@ -144,7 +144,8 @@ export default class ModelsController {
 
     // const result = getCommonLabelsSummary(commonLabels)
     const result = countLabelOccurrences(rekognitionLabels, clarifaiLabels, api4aiLabels)
-    logger.info('Result', result)
+    logger.info('Result analysis image : ' + result)
+    logger.info('========================================')
     return response.status(200).send(result.slice(0, 2))
   }
 
@@ -159,6 +160,7 @@ export default class ModelsController {
 
     const fusionWord = await generateFusionWord(word1, word2)
     logger.info('Fusion word generated : ' + fusionWord)
+    logger.info('========================================')
     return response.status(200).send(fusionWord)
   }
 
@@ -283,6 +285,7 @@ export default class ModelsController {
     })
 
     logger.info('Model created successfully for model: ' + decodedWord, model.toJSON())
+    logger.info('========================================')
     return response.status(200).send(model.toJSON())
   }
 
@@ -360,6 +363,7 @@ export default class ModelsController {
         model.mtlUrl = s3MtlUrl
         model.pngUrl = s3PngUrl
         await model.save()
+        logger.info('========================================')
         return response.status(200).send(model.toJSON())
       }
     } catch (error) {
@@ -367,6 +371,7 @@ export default class ModelsController {
         'Error uploading texture to S3 for model: ' + params.id + '(' + model.name + ')',
         error
       )
+      logger.info('========================================')
       return response.status(500).send({ error: 'Error uploading texture to S3' })
     }
   }
