@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.lynx.core": "https://github.com/Lynx-MR/UnitySDK.git?path=/Packages/Core",
+    "com.lynx.previews": "https://github.com/Lynx-MR/UnitySDKPreviews.git?path=/Packages",
     "com.unity.collab-proxy": "2.5.2",
     "com.unity.inputsystem": "1.8.1",
     "com.unity.learn.iet-framework": "3.1.3",
