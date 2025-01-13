@@ -18,6 +18,7 @@ public class FusionManager : MonoBehaviour
         }
 
         apiManager = FindObjectOfType<APIManager>();
+        Debug.Log("test");
         if (apiManager == null)
         {
             Debug.LogError("APIManager not found in the scene!");
