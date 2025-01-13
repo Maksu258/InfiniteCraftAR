@@ -4,74 +4,52 @@ using System.Collections.Generic;
 
 public class AssetListManager : MonoBehaviour
 {
-    // Assign these in the Inspector
-    public GameObject assetButtonPrefab;  // The button prefab
-    public Transform contentPanel;       // The Content object of the Scroll View
-
-    // Example asset structure
-    private List<Asset> assets = new List<Asset>();
+    public GameObject assetButtonPrefab; // Assign the Button Prefab
+    public Transform contentPanel;      // Assign the Scroll View Content
+    public List<Asset> assets = new List<Asset>(); // List of assets
 
     void Start()
     {
-        // Load example assets (replace with your dynamic loading logic)
+        // Populate the asset list (add your assets here)
         LoadAssets();
 
-        // Populate the UI with buttons
+        // Dynamically create buttons for each asset
         PopulateAssetList();
     }
 
-
     void LoadAssets()
     {
-        GameObject sphereModel = Resources.Load<GameObject>("Models/Sphere");
-        assets.Add(new Asset("Sphere", "https://example.com/car", true, sphereModel));
+        // Example assets (replace with your actual resources or models)
+        GameObject sphereModel = Resources.Load<GameObject>("Objects/Sphere");
+        GameObject cubeModel = Resources.Load<GameObject>("Objets/Cube");
 
-        GameObject cubeModel = Resources.Load<GameObject>("Models/Cube");
-        assets.Add(new Asset(" Cube", "https://example.com/car", true, cubeModel));
-
+        assets.Add(new Asset("Sphere", sphereModel));
+        assets.Add(new Asset("Cube", cubeModel));
     }
-
 
     void PopulateAssetList()
     {
         foreach (Asset asset in assets)
         {
-            // Instantiate a button from the prefab
+            // Instantiate a button for each asset
             GameObject button = Instantiate(assetButtonPrefab, contentPanel);
-            button.transform.localScale = Vector3.one;  // Adjust the scale if necessary
+            button.transform.localScale = Vector3.one;
 
-            // Set the button text to the asset's name
+            // Set the button's text to the asset's name
             Text buttonText = button.GetComponentInChildren<Text>();
             buttonText.text = asset.name;
 
-            // Debug to check that buttons are being created and listeners added
-            Debug.Log($"Adding listener to button for asset: {asset.name}");
-
-            // Add the OnClick listener for the button
-            button.GetComponent<Button>().onClick.AddListener(() => OnAssetSelected(asset));
+            // Add a listener to spawn the asset when the button is clicked
+            button.GetComponent<Button>().onClick.AddListener(() => SpawnAsset(asset));
         }
     }
 
-
-
-    public void OnAssetSelected(Asset asset)
+    void SpawnAsset(Asset asset)
     {
-        Debug.Log("Selected asset: " + asset.name);
-
+        // Spawn the asset in front of the user
         Vector3 spawnPosition = Camera.main.transform.position + Camera.main.transform.forward * 1.0f;
-        GameObject instantiatedAsset = Instantiate(asset.model, spawnPosition, Quaternion.identity);
-
-        // Ensure the instantiated model has a Collider
-        if (instantiatedAsset.GetComponent<Collider>() == null)
-        {
-            instantiatedAsset.AddComponent<BoxCollider>();
-        }
-
-        // Add the AssetBehavior script
-        instantiatedAsset.AddComponent<AssetBehavior>();
+        Instantiate(asset.model, spawnPosition, Quaternion.identity);
     }
-
-
 }
 
 // Asset class definition
@@ -79,15 +57,11 @@ public class AssetListManager : MonoBehaviour
 public class Asset
 {
     public string name;      // Name of the asset
-    public string link;      // URL or link to an external resource
-    public bool permanent;   // Indicates if the asset is permanent
-    public GameObject model; // The actual 3D model
+    public GameObject model; // The 3D model of the asset
 
-    public Asset(string name, string link, bool permanent, GameObject model)
+    public Asset(string name, GameObject model)
     {
         this.name = name;
-        this.link = link;
-        this.permanent = permanent;
         this.model = model;
     }
 }

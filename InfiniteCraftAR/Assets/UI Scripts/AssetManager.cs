@@ -40,25 +40,6 @@ public class AssetManager : MonoBehaviour
         }
     }
 
-    public void ResetAssets()
-    {
-        // Keep only permanent assets
-        assets = assets.Where(asset => asset.permanent).ToList();
-
-        // Clear all models in the scene
-        foreach (GameObject model in GameObject.FindGameObjectsWithTag("Asset"))
-        {
-            Destroy(model);
-        }
-
-        // Reload permanent assets
-        foreach (Asset asset in assets)
-        {
-            Instantiate(asset.model, Vector3.zero, Quaternion.identity);
-        }
-
-        SaveAssets();
-    }
 
     [System.Serializable]
     public class AssetListWrapper
