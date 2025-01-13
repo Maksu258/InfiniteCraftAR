@@ -43,7 +43,7 @@ public class TaskID
 public class APIManager : MonoBehaviour
 {
 
-    private string apiUrl = "http://51.178.83.2/models/";
+    public string apiUrl = "http://51.178.83.2/models/";
     private TaskID taskID = new TaskID { result = "0193da09-6ca8-7441-8f2d-2e6dec62f401" };
     private string imgPath = Application.dataPath + "/TestRessources/img.jpg";
 
@@ -118,8 +118,9 @@ public class APIManager : MonoBehaviour
         }
     }
 
-    IEnumerator generateFusionWord(string url, string[] words)
+  public  IEnumerator generateFusionWord(string url, string[] words)
     {
+        Debug.Log("generating!");
         // Configurer la requ�te
         UnityWebRequest request = new UnityWebRequest(url + "generate-fusion-word", "POST");
 
@@ -255,13 +256,13 @@ public class APIManager : MonoBehaviour
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
 
-        //Debug.Log("URL : " + url + "/" + taskID);
+        Debug.Log("URL : " + url + "/" + taskID);
         //Debug.Log("Payload : " + jsonPayload);
         //Debug.Log("En-t�tes : Content-Type: application/json, Authorization: Bearer " + apiKey);
 
         // Envoyer la requ�te
         yield return request.SendWebRequest();
-
+        Debug.Log("a");
         if (request.result != UnityWebRequest.Result.Success)
         {
             Debug.LogError($"Erreur lors du t�l�chargement : {request.error}");
@@ -305,7 +306,25 @@ public class APIManager : MonoBehaviour
         }
     }
 
+    public IEnumerator NewAsset(string fusionWord, string apiUrl)
+    {
+        Debug.Log($"Creating new asset for fusion word: {fusionWord}");
 
+        // Fetch 3D object data from API using the fusion word
+        yield return StartCoroutine(get3DObject(apiUrl, fusionWord));
 
+        // Assume `get3DObject` fetches the necessary object data including URLs
+        // Ensure the fetched object is instantiated in the scene
+        string objPath = Application.dataPath + $"/Objects/{fusionWord}.obj";
+
+        if (File.Exists(objPath))
+        {
+            instantiate3DObj(objPath); // Load the model from the downloaded file
+        }
+        else
+        {
+            Debug.LogError("Failed to find the downloaded .obj file for the new asset.");
+        }
+    }
 
 }

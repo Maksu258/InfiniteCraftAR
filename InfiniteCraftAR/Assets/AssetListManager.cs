@@ -4,96 +4,98 @@ using System.Collections.Generic;
 
 public class AssetListManager : MonoBehaviour
 {
-    // Assign these in the Inspector
-    public GameObject assetButtonPrefab;  // The button prefab
-    public Transform contentPanel;       // The Content object of the Scroll View
+    [Header("UI Components")]
+    public GameObject assetButtonPrefab;  // Assign the Button Prefab
+    public Transform contentPanel;       // Assign the Scroll View Content
 
-    // Example asset structure
-    private List<Asset> assets = new List<Asset>();
+    [Header("Asset Management")]
+    public List<Asset> assets = new List<Asset>(); // Store all assets
 
     void Start()
     {
-        // Load example assets (replace with your dynamic loading logic)
-        LoadAssets();
-
-        // Populate the UI with buttons
+        LoadInitialAssets();
         PopulateAssetList();
     }
 
-
-    void LoadAssets()
+    // Load predefined assets (e.g., from Resources folder or initial setup)
+    void LoadInitialAssets()
     {
-        GameObject sphereModel = Resources.Load<GameObject>("Models/Sphere");
-        assets.Add(new Asset("Sphere", "https://example.com/car", true, sphereModel));
-
-        GameObject cubeModel = Resources.Load<GameObject>("Models/Cube");
-        assets.Add(new Asset(" Cube", "https://example.com/car", true, cubeModel));
-
+        AddAsset("Sphere", Resources.Load<GameObject>("Models/Sphere"));
+        AddAsset("Cube", Resources.Load<GameObject>("Models/Cube"));
     }
 
+    // Add a new asset to the list and UI dynamically
+    public void AddAsset(string name, GameObject model)
+    {
+        if (model == null)
+        {
+            Debug.LogError($"Failed to add asset: Model is null for {name}");
+            return;
+        }
 
+        // Add to the list
+        assets.Add(new Asset(name, model));
+
+        // Create a UI button for the asset
+        GameObject button = Instantiate(assetButtonPrefab, contentPanel);
+        button.transform.localScale = Vector3.one;
+
+        // Set button text
+        Text buttonText = button.GetComponentInChildren<Text>();
+        buttonText.text = name;
+
+        // Add a click event to spawn the asset
+        button.GetComponent<Button>().onClick.AddListener(() => SpawnAsset(name));
+    }
+
+    // Populate the UI with buttons for all assets
     void PopulateAssetList()
     {
         foreach (Asset asset in assets)
         {
-            // Instantiate a button from the prefab
-            GameObject button = Instantiate(assetButtonPrefab, contentPanel);
-            button.transform.localScale = Vector3.one;  // Adjust the scale if necessary
-
-            // Set the button text to the asset's name
-            Text buttonText = button.GetComponentInChildren<Text>();
-            buttonText.text = asset.name;
-
-            // Debug to check that buttons are being created and listeners added
-            Debug.Log($"Adding listener to button for asset: {asset.name}");
-
-            // Add the OnClick listener for the button
-            button.GetComponent<Button>().onClick.AddListener(() => OnAssetSelected(asset));
+            AddAsset(asset.name, asset.model);
         }
     }
 
-
-
-    public void OnAssetSelected(Asset asset)
+    // Spawn the selected asset in the scene
+    public void SpawnAsset(string assetName)
     {
-        Debug.Log("Selected asset: " + asset.name);
+        Asset asset = assets.Find(a => a.name == assetName);
+        if (asset == null)
+        {
+            Debug.LogError($"Asset not found: {assetName}");
+            return;
+        }
 
+        // Spawn the asset at a fixed position
         Vector3 spawnPosition = new Vector3(-94f, -91f, 300f);
         GameObject instantiatedAsset = Instantiate(asset.model, spawnPosition, Quaternion.identity);
 
-        // Ensure the instantiated model has a Collider
+        // Ensure it has a collider and no gravity
         if (instantiatedAsset.GetComponent<Collider>() == null)
         {
             instantiatedAsset.AddComponent<BoxCollider>();
         }
+
         Rigidbody rb = instantiatedAsset.GetComponent<Rigidbody>();
         if (rb == null)
         {
-            rb = instantiatedAsset.AddComponent<Rigidbody>(); // Add Rigidbody if it doesn't exist
+            rb = instantiatedAsset.AddComponent<Rigidbody>();
         }
-        rb.useGravity = false;  // Disable gravity explicitly
-        rb.isKinematic = false; // Allow manual movement or physics without gravity
-
-        // Add the AssetBehavior script
-        instantiatedAsset.AddComponent<AssetBehavior>();
+        rb.useGravity = false;
     }
-
-
 }
 
-// Asset class definition
+// Asset class for managing asset data
 [System.Serializable]
 public class Asset
 {
-    public string name;      // Name of the asset
-    public string link;      // URL or link to an external resource
+    public string name;
+    public GameObject model;
 
-    public GameObject model; // The actual 3D model
-
-    public Asset(string name, string link, bool permanent, GameObject model)
+    public Asset(string name, GameObject model)
     {
         this.name = name;
-        this.link = link;
         this.model = model;
     }
 }
