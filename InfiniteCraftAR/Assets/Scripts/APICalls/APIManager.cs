@@ -55,10 +55,117 @@ public class APIManager : MonoBehaviour
         return "{\"items\":" + jsonArray + "}";
     }
 
+    // Cette fonction permet de charger et d'ajouter une texture à un objet 3D passé en paramètre
+    public void AddTextureToObject(GameObject targetObject, string texturePath)
+    {
+        // Charger la texture depuis le chemin donné
+        Texture2D texture = LoadTexture(texturePath);
+
+        if (texture != null)
+        {
+            // Assurez-vous que l'objet a un Renderer et récupérez son matériel
+            Renderer renderer = targetObject.GetComponentInChildren<Renderer>();
+            if (renderer != null)
+            {
+                Material material = renderer.material;
+
+                Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+                if (shader != null)
+                {
+                    material.shader = shader;
+                    Debug.Log("Shader modifié pour Universal Render Pipeline/Lit");
+                }
+                else
+                {
+                    Debug.LogError("Le shader 'Universal Render Pipeline/Lit' n'a pas été trouvé.");
+                    return;
+                }
+
+                material.SetTexture("_BaseMap", texture);
+                Debug.Log("Texture appliquée au matériau");
+            }
+            else
+            {
+                Debug.LogWarning("L'objet n'a pas de Renderer.");
+            }
+        }
+        else
+        {
+            Debug.LogError("La texture n'a pas pu être chargée.");
+        }
+    }
+
+    // Fonction pour charger la texture depuis un chemin
+    private Texture2D LoadTexture(string path)
+    {
+        // Utiliser les méthodes Unity pour charger la texture depuis un chemin de fichier
+        byte[] fileData = System.IO.File.ReadAllBytes(path);
+        Texture2D texture = new Texture2D(2, 2); // Dimensions temporaires avant de charger l'image
+        texture.LoadImage(fileData); // Charge l'image à partir des données en bytes
+        Debug.Log("texture loaded");
+        return texture;
+    }
+
+
+    /// <summary>
+    /// Modifie un fichier .obj pour remplacer le mtllib et le usemtl.
+    /// </summary>
+    /// <param name="filePath">Chemin du fichier .obj à modifier.</param>
+    /// <param name="mtlFileName">Nouveau nom du fichier .mtl.</param>
+    /// <param name="materialName">Nouveau nom du matériau utilisé (usemtl).</param>
+    public static void CleanAndFixObjFile(string filePath, string mtlFileName, string materialName)
+    {
+        if (!File.Exists(filePath))
+        {
+            UnityEngine.Debug.LogError($"Le fichier .obj n'existe pas : {filePath}");
+            return;
+        }
+
+        string tempFilePath = filePath + ".tmp"; // Chemin pour le fichier temporaire.
+
+        try
+        {
+            using (StreamReader reader = new StreamReader(filePath))
+            using (StreamWriter writer = new StreamWriter(tempFilePath))
+            {
+                string line;
+
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (line.StartsWith("mtllib "))
+                    {
+                        writer.WriteLine($"mtllib {mtlFileName+".mtl"}");
+                    }
+                    else if (line.StartsWith("o "))
+                    {
+                        writer.WriteLine("usemtl Material.001");
+                    }
+                    else
+                    {
+                        writer.WriteLine(line);
+                    }
+                }
+            }
+
+            // Remplace l'ancien fichier par le nouveau.
+            File.Delete(filePath);
+            File.Move(tempFilePath, filePath);
+
+            UnityEngine.Debug.Log($"Fichier .obj modifié avec succès : {filePath}");
+        }
+        catch (System.Exception ex)
+        {
+            UnityEngine.Debug.LogError($"Erreur lors de la modification du fichier .obj : {ex.Message}");
+            // Supprime le fichier temporaire en cas d'échec.
+            if (File.Exists(tempFilePath))
+                File.Delete(tempFilePath);
+        }
+    }
+
 
     void Start()
     {
-        var payload = new Payload
+        /*var payload = new Payload
         {
             mode = "preview",
             prompt = "godzilla"
@@ -68,12 +175,13 @@ public class APIManager : MonoBehaviour
         string payloadJSON = JsonUtility.ToJson(payload);
 
         TaskID taskId = JsonUtility.FromJson<TaskID>(JsonUtility.ToJson(taskID));
-        Debug.Log(taskId.result);
+        Debug.Log(taskId.result);*/
 
-        //StartCoroutine(postAnalyzeImage(apiUrl, imgPath));
-
-        string[] array = { "computer", "glass" };
+        StartCoroutine(postAnalyzeImage(apiUrl, imgPath));
+        /*
+        string[] array = { "tower", "water" };
         StartCoroutine(generateFusionWord(apiUrl, array));
+        */
     }
 
     IEnumerator postAnalyzeImage(string url, string imagePath, string alreadyKnownObject = null)
@@ -169,6 +277,12 @@ public class APIManager : MonoBehaviour
             Debug.LogError($"Erreur lors du téléchargement : {request.error}");
             yield break;
         }
+        if (request.responseCode == 504)
+        {
+            Debug.Log("Erreur 504 : Gateway Timeout");
+            yield return StartCoroutine(get3DObject(url, word));
+            yield break;
+        }
 
         string data = request.downloadHandler.text;
 
@@ -178,16 +292,17 @@ public class APIManager : MonoBehaviour
 
         generatedObject furniture = JsonUtility.FromJson<generatedObject>(cleanedJson);
 
-        StartCoroutine(DownloadObjFromUrlRequest(furniture.modelUrl, furniture.name, ".obj"));
-        if(furniture.mtlUrl == null || furniture.mtlUrl == "" || furniture.pngUrl == null || furniture.pngUrl == "")
+        yield return StartCoroutine(DownloadObjFromUrlRequest(furniture.modelUrl, furniture.name, ".obj"));
+
+        if (furniture.pngUrl == null || furniture.pngUrl == "")
         {
             StartCoroutine(getTexture(url, furniture.id));
         }
         else
         {
-            StartCoroutine(DownloadObjFromUrlRequest(furniture.modelUrl, furniture.name, ".mtl"));
-            StartCoroutine(DownloadObjFromUrlRequest(furniture.pngUrl, furniture.name, ".png"));
-            instantiate3DObj(Application.dataPath + "/Objects/" + furniture.name + ".obj");
+            Debug.Log("Object already have texture generated");
+            yield return StartCoroutine(DownloadObjFromUrlRequest(furniture.pngUrl, furniture.name, ".png"));
+            instantiate3DObj(Application.dataPath + "/Objects/" + furniture.name + ".obj", Application.dataPath + "/Objects/" + furniture.name + ".png");
         }
         
         /*
@@ -216,7 +331,13 @@ public class APIManager : MonoBehaviour
 
         if (request.result != UnityWebRequest.Result.Success)
         {
+            if(request.error == "")
             Debug.LogError($"Erreur lors du téléchargement : {request.error}");
+        }
+        if (request.responseCode == 504)
+        {
+            Debug.Log("Erreur 504 : Gateway Timeout");
+            yield return StartCoroutine(getTexture(url, id));
             yield break;
         }
 
@@ -226,25 +347,17 @@ public class APIManager : MonoBehaviour
         string cleanedJson = data.Replace("\n", "").Replace("\t", "").Trim();
 
         generatedObject furniture = JsonUtility.FromJson<generatedObject>(cleanedJson);
-        
-        if (furniture.mtlUrl == null || furniture.mtlUrl == "")
-        {
-            Debug.Log("Aucun .mtl n'a été généré");
-        }
-        else
-        {
-            StartCoroutine(DownloadObjFromUrlRequest(furniture.modelUrl, furniture.name, ".mtl"));
-        }
+
         if (furniture.pngUrl == null || furniture.pngUrl == "")
         {
             Debug.Log("Aucune texture n'a été générée");
         }
         else
         {
-            StartCoroutine(DownloadObjFromUrlRequest(furniture.pngUrl, furniture.name, ".jpg"));
+            yield return StartCoroutine(DownloadObjFromUrlRequest(furniture.pngUrl, furniture.name, ".png"));
         }
-
-
+        Debug.Log("Just before instatiate textured object");
+        instantiate3DObj(Application.dataPath + "/Objects/" + furniture.name + ".obj", Application.dataPath + "/Objects/" + furniture.name + ".png");
     }
 
     IEnumerator DownloadObjFromUrlRequest(string url, string name, string extention)
@@ -274,15 +387,16 @@ public class APIManager : MonoBehaviour
 
         File.WriteAllBytes(write_path, data);
 
-        if(extention == ".obj")
+        if (extention == ".obj" && GameObject.Find(name) == null)
         {
+
+            CleanAndFixObjFile(write_path, name, name);
             instantiate3DObj(write_path);
         }
         Debug.Log(request.downloadHandler.text);
-
     }
 
-    void instantiate3DObj(string objPath, string mtlPath = null)
+    void instantiate3DObj(string objPath, string pngPath = null)
     {
         // Vérifier si l'objet existe déjà dans la scène
         string objectName = Path.GetFileNameWithoutExtension(objPath);
@@ -291,12 +405,24 @@ public class APIManager : MonoBehaviour
         if (existingObj != null)
         {
             Debug.Log("L'objet existe déjà dans la scène : " + objectName);
-            Destroy(existingObj);
+            if(pngPath != null)
+            {
+                Debug.Log("Adding texture to existing object");
+                AddTextureToObject(existingObj, pngPath);
+            }
+            return;
         }
 
-        var loadedObj = new OBJLoader().Load(objPath, mtlPath);
+        var loadedObj = new OBJLoader().Load(objPath);
         if (loadedObj != null)
         {
+            Debug.Log(objPath);
+            Debug.Log(pngPath);
+            if(pngPath != null)
+            {
+                Debug.Log("Adding texture to object");
+                AddTextureToObject(loadedObj, pngPath);
+            }
             Debug.Log("Objet 3D instancié : " + objectName);
         }
         else

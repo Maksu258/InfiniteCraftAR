@@ -1,7 +1,7 @@
 # Blender 3.6.0
 # www.blender.org
-mtllib temp.mtl
-o Mesh1
+mtllib Screen.mtl
+usemtl Material.001
 v -0.474576 -0.819364 -0.438174
 v -0.476474 -0.818652 -0.405224
 v -0.475978 -0.812007 -0.438048
