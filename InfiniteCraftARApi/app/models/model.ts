@@ -11,6 +11,12 @@ export default class Model extends BaseModel {
   @column()
   declare modelUrl: string
 
+  @column()
+  declare mtlUrl: string
+
+  @column()
+  declare pngUrl: string
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

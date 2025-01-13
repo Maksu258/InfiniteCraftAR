@@ -4,11 +4,16 @@ import type { HttpContext } from '@adonisjs/core/http'
 import drive from '@adonisjs/drive/services/main'
 import AWS from 'aws-sdk'
 import env from '#start/env'
+import logger from '@adonisjs/core/services/logger'
+
 import {
   compareLabels,
+  countLabelOccurrences,
   fetchLabels,
   generateFusionWord,
   getCommonLabelsSummary,
+  keyToUse,
+  retrieve3dTask,
 } from '../utils/utils.js'
 
 export default class ModelsController {
@@ -18,8 +23,9 @@ export default class ModelsController {
   }
 
   public async analyzeImage({ request, response }: HttpContext) {
+    console.log('Analyze image', request)
     const image = request.file('file', {
-      size: '2mb',
+      size: '20mb',
       extnames: ['jpeg', 'jpg', 'png'],
     })
     if (!image) {
@@ -130,25 +136,31 @@ export default class ModelsController {
 
     console.log('Labels trouvés :', api4aiLabels)
 
-    const commonLabels = [
-      ...compareLabels(rekognitionLabels, clarifaiLabels, 'Rekognition vs Clarifai'),
-      ...compareLabels(rekognitionLabels, api4aiLabels, 'Rekognition vs API4AI'),
-      ...compareLabels(clarifaiLabels, api4aiLabels, 'Clarifai vs API4AI'),
-    ]
+    // const commonLabels = [
+    //   ...compareLabels(rekognitionLabels, clarifaiLabels, 'Rekognition vs Clarifai'),
+    //   ...compareLabels(rekognitionLabels, api4aiLabels, 'Rekognition vs API4AI'),
+    //   ...compareLabels(clarifaiLabels, api4aiLabels, 'Clarifai vs API4AI'),
+    // ]
 
-    const result = getCommonLabelsSummary(commonLabels)
-
+    // const result = getCommonLabelsSummary(commonLabels)
+    const result = countLabelOccurrences(rekognitionLabels, clarifaiLabels, api4aiLabels)
+    logger.info('Result analysis image : ' + result)
+    logger.info('========================================')
     return response.status(200).send(result.slice(0, 2))
   }
 
   public async generateFusionWord({ request, response }: HttpContext) {
     const { word1, word2 } = request.only(['word1', 'word2'])
 
+    logger.info('Generating fusion word for ' + word1 + ' and ' + word2)
     if (!word1 || !word2) {
+      logger.error('Missing word parameter')
       return response.status(400).send({ error: 'Missing word parameter' })
     }
 
     const fusionWord = await generateFusionWord(word1, word2)
+    logger.info('Fusion word generated : ' + fusionWord)
+    logger.info('========================================')
     return response.status(200).send(fusionWord)
   }
 
@@ -158,12 +170,16 @@ export default class ModelsController {
     }
 
     const decodedWord = decodeURIComponent(params.word)
+    logger.info('Getting 3D object for model: ' + decodedWord)
     let model = await Model.findBy('name', decodedWord)
     if (model) {
+      logger.info('3D object found for model: ' + decodedWord)
       return response.status(200).send(model)
     }
 
-    let headers = { Authorization: `Bearer ${env.get('MESHYAI_API_KEY')}` }
+    logger.info('Creating 3D object for model: ' + decodedWord)
+
+    const headers = { Authorization: `Bearer ${await keyToUse()}` }
     const payload = {
       mode: 'preview',
       prompt: `a ${decodedWord}`,
@@ -182,6 +198,8 @@ export default class ModelsController {
         },
         body: JSON.stringify(payload),
       })
+
+      console.log('response', response)
       const data = (await response.json()) as { result: string }
       modelTaskId = data.result
     } catch (error) {
@@ -189,61 +207,172 @@ export default class ModelsController {
     }
 
     if (!modelTaskId) {
-      return response.status(404).send({ error: 'Model not found' })
+      logger.error('Create model failed, modelTaskId not found for model: ' + decodedWord)
+      return response.status(404).send({ error: 'Create model failed, modelTaskId not found' })
     }
 
-    headers = { Authorization: `Bearer ${env.get('MESHYAI_API_KEY')}` }
+    console.log('modelTaskId', modelTaskId)
     let modelUrls = null
 
-    while (true) {
-      try {
-        const response = await fetch(`https://api.meshy.ai/openapi/v2/text-to-3d/${modelTaskId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            ...headers,
-          },
-        })
-        const data: any = await response.json()
-
-        if (data.progress === 100) {
-          modelUrls = data.model_urls
-          break
-        }
-      } catch (error) {
-        console.error(error)
-        break
-      }
+    logger.info('Waiting for model to be ready for model: ' + decodedWord)
+    try {
+      const data = await retrieve3dTask(modelTaskId, headers)
+      modelUrls = data.model_urls
+    } catch (error) {
+      console.error(error)
     }
 
     if (!modelUrls) {
-      return response.status(404).send({ error: 'Model not found' })
+      logger.error('Create model failed, modelUrls not found for model: ' + decodedWord)
+      return response.status(404).send({ error: 'Create model failed, modelUrls not found' })
     }
+
+    const lastModel = await Model.query().orderBy('id', 'desc').first()
+    const newId = lastModel ? lastModel.id + 1 : 1
 
     const objUrl = modelUrls.obj
     const objResponse = await fetch(objUrl)
     const objBuffer = await objResponse.arrayBuffer()
-    const objKey = `${cuid()}.obj`
+    const objKey = `${decodedWord}-${newId}.obj`
 
     try {
-      await drive.use('s3').put(objKey, Buffer.from(objBuffer), {
-        visibility: 'public',
-        contentType: 'application/octet-stream',
-      })
-
-      console.log('File uploaded successfully to S3:', objKey)
+      const existingObjUrl = await drive.use('s3').exists(objKey)
+      if (existingObjUrl) {
+        logger.info('OBJ already exists on S3 for model: ' + decodedWord, objKey)
+      } else {
+        await drive.use('s3').put(objKey, Buffer.from(objBuffer), {
+          visibility: 'public',
+          contentType: 'application/octet-stream',
+        })
+        logger.info('File uploaded successfully to S3 for model: ' + decodedWord, objKey)
+      }
     } catch (error) {
-      console.error('Error uploading file to S3:', error)
+      logger.error('Error uploading file to S3 for model: ' + decodedWord, error)
       return response.status(500).send({ error: 'Error uploading file to S3' })
     }
 
     const s3ObjUrl = await drive.use().getUrl(`./${objKey}`)
 
+    logger.info('Creating texture for model: ' + decodedWord)
+    let textureId = null
+    const texturePayload = {
+      mode: 'refine',
+      preview_task_id: modelTaskId,
+      enable_pbr: true,
+    }
+
+    try {
+      const textureResponse = await fetch('https://api.meshy.ai/openapi/v2/text-to-3d', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify(texturePayload),
+      })
+
+      const textureData = (await textureResponse.json()) as { result: string }
+      textureId = textureData.result
+    } catch (error) {
+      logger.error('Error fetching texture for model: ' + decodedWord, error)
+      return response.status(500).send({ error: 'Error fetching texture' })
+    }
+
     model = await Model.create({
       name: decodedWord,
       modelUrl: s3ObjUrl,
+      mtlUrl: textureId,
     })
 
+    logger.info('Model created successfully for model: ' + decodedWord, model.toJSON())
+    logger.info('========================================')
     return response.status(200).send(model.toJSON())
+  }
+
+  public async getTexture({ params, response }: HttpContext) {
+    logger.info('Getting texture for model: ' + params.id)
+    if (!params.id) {
+      logger.error('Missing id parameter')
+      return response.status(400).send({ error: 'Missing id parameter' })
+    }
+    const model = await Model.findBy('id', params.id)
+    if (!model) {
+      logger.error('Model not found')
+      return response.status(404).send({ error: 'Model not found' })
+    }
+
+    const regex = /^\d/
+
+    if (!regex.test(model.mtlUrl)) {
+      logger.info('Texture already generated for model: ' + params.id + '(' + model.name + ')')
+      return response.status(200).send(model.toJSON())
+    }
+
+    const taskId = model.mtlUrl
+
+    logger.info('Waiting for texture to be ready for model: ' + params.id + '(' + model.name + ')')
+    let headers = { Authorization: `Bearer ${await keyToUse(model.id)}` }
+    const apiResponse = await retrieve3dTask(taskId, headers)
+    const mtlUrl = apiResponse.model_urls.mtl
+    const pngUrl = apiResponse.texture_urls[0].base_color
+
+    const mtlResponse = await fetch(mtlUrl)
+    const mtlBuffer = await mtlResponse.arrayBuffer()
+    const mtlKey = `${model.name}-${model.id}.mtl`
+
+    const pngResponse = await fetch(pngUrl)
+    const pngBuffer = await pngResponse.arrayBuffer()
+    const pngKey = `${model.name}-${model.id}.png`
+
+    try {
+      const existingMtlUrl = await drive.use('s3').exists(mtlKey)
+      const existingPngUrl = await drive.use('s3').exists(pngKey)
+
+      if (existingMtlUrl && existingPngUrl) {
+        logger.info(
+          'MTL and PNG already exist on S3 for model: ' + params.id + '(' + model.name + ')'
+        )
+        model.mtlUrl = await drive.use().getUrl(`./${mtlKey}`)
+        model.pngUrl = await drive.use().getUrl(`./${pngKey}`)
+        await model.save()
+        return response.status(200).send(model.toJSON())
+      } else {
+        logger.info('Uploading mtl and png to S3 for model: ' + params.id + '(' + model.name + ')')
+        await drive.use('s3').put(mtlKey, Buffer.from(mtlBuffer), {
+          visibility: 'public',
+          contentType: 'text/plain',
+        })
+        await drive.use('s3').put(pngKey, Buffer.from(pngBuffer), {
+          visibility: 'public',
+          contentType: 'image/png',
+        })
+
+        const s3MtlUrl = await drive.use().getUrl(`./${mtlKey}`)
+        const s3PngUrl = await drive.use().getUrl(`./${pngKey}`)
+        logger.info(
+          'MTL and PNG uploaded successfully to S3 for model: ' +
+            params.id +
+            '(' +
+            model.name +
+            ')',
+          {
+            s3MtlUrl,
+            s3PngUrl,
+          }
+        )
+        model.mtlUrl = s3MtlUrl
+        model.pngUrl = s3PngUrl
+        await model.save()
+        logger.info('========================================')
+        return response.status(200).send(model.toJSON())
+      }
+    } catch (error) {
+      logger.error(
+        'Error uploading texture to S3 for model: ' + params.id + '(' + model.name + ')',
+        error
+      )
+      logger.info('========================================')
+      return response.status(500).send({ error: 'Error uploading texture to S3' })
+    }
   }
 }
