@@ -1,4 +1,4 @@
-﻿using Dummiesman;
+using Dummiesman;
 using System.IO;
 using UnityEngine;
 

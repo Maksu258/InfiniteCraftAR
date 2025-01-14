@@ -1,4 +1,4 @@
-﻿namespace Dummiesman
+namespace Dummiesman
 {
     public static class StringExtensions
     {
