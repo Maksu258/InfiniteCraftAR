@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using UnityEngine.InputSystem;
 public class MenuController : MonoBehaviour
 {
     [SerializeField] private GameObject menuPanel;
