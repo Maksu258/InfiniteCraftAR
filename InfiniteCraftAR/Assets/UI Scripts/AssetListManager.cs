@@ -27,12 +27,18 @@ public class AssetListManager : MonoBehaviour
     {
         assets.Clear();
 
-        // Load non-permanent assets
+        Debug.Log($"Loading assets from: {objectsFolderPath}");
         LoadAssetsFromFolder(objectsFolderPath, false);
 
-        // Load permanent assets
+        Debug.Log($"Loading assets from: {permanentFolderPath}");
         LoadAssetsFromFolder(permanentFolderPath, true);
+
+        foreach (var asset in assets)
+        {
+            Debug.Log($"Asset Loaded: {asset.name} | Path: {asset.path} | Permanent: {asset.isPermanent}");
+        }
     }
+
 
     // Helper function to load assets from a specified folder
     void LoadAssetsFromFolder(string folderPath, bool isPermanent)
@@ -147,6 +153,12 @@ public class AssetListManager : MonoBehaviour
         string fullFilePath = Path.GetFullPath(filePath);
         return fullFilePath.StartsWith(fullPermanentPath);
     }
+
+    public List<Asset> GetAssets()
+    {
+        return assets;
+    }
+
 }
 
 // Asset class to represent assets in the list

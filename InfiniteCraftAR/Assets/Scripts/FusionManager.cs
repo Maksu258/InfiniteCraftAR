@@ -1,109 +1,128 @@
+using System.Collections;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using TMPro;
 
 public class FusionManager : MonoBehaviour
 {
-    public bool isFusionModeActive = false;
-    private GameObject firstSelectedObject;
-    private GameObject secondSelectedObject;
-    private APIManager apiManager;
+    [Header("UI Components")]
+    public GameObject fusionButton; // Button to toggle Fusion Mode
+    public GameObject fusionScrollView; // Scroll View for asset selection
+    public Transform contentPanel; // Content container for buttons
+    public GameObject assetButtonPrefab; // Prefab for asset buttons
+    public APIManager apiManager; // Reference to the APIManager
 
-    public Camera mainCamera; // Assign manually if using a custom camera setup
+    private bool isFusionModeActive = false;
+    private Asset firstSelectedAsset = null;
+    private Asset secondSelectedAsset = null;
 
     void Start()
     {
-        if (mainCamera == null)
+        // Set up the Fusion Button
+        if (fusionButton != null)
         {
-            mainCamera = Camera.main; // Fallback to Main Camera
+            fusionButton.GetComponent<Button>().onClick.AddListener(ToggleFusionMode);
         }
 
-        apiManager = FindObjectOfType<APIManager>();
-        Debug.Log("test");
-        if (apiManager == null)
+        // Ensure the Scroll View is initially hidden
+        if (fusionScrollView != null)
         {
-            Debug.LogError("APIManager not found in the scene!");
-        }
-    }
-
-    void Update()
-    {
-        if (isFusionModeActive)
-        {
-            if (Mouse.current == null)
-            {
-                Debug.LogError("Mouse input not detected! Check Input System setup.");
-                return;
-            }
-
-            if (Mouse.current.leftButton.wasPressedThisFrame)
-            {
-                TrySelectObject();
-            }
+            fusionScrollView.SetActive(false);
         }
     }
 
-    void TrySelectObject()
-    {
-        if (mainCamera == null)
-        {
-            Debug.LogError("Main Camera is not assigned or tagged as MainCamera.");
-            return;
-        }
-
-        Ray ray = mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit))
-        {
-            if (hit.collider == null)
-            {
-                Debug.LogError("Raycast hit an object without a collider!");
-                return;
-            }
-
-            GameObject selectedObject = hit.collider.gameObject;
-
-            if (firstSelectedObject == null)
-            {
-                firstSelectedObject = selectedObject;
-                Debug.Log("First Object Selected: " + selectedObject.name);
-            }
-            else if (secondSelectedObject == null && selectedObject != firstSelectedObject)
-            {
-                secondSelectedObject = selectedObject;
-                Debug.Log("Second Object Selected: " + selectedObject.name);
-
-                // Start the API call via APIManager
-                string[] words = { firstSelectedObject.name, secondSelectedObject.name };
-                Debug.Log(words);
-                //TODO: Change this!
-               // StartCoroutine(apiManager.generateFusionWord(apiManager.apiUrl, words));
-              
-                // Reset selections
-                firstSelectedObject = null;
-                secondSelectedObject = null;
-            }
-        }
-        else
-        {
-            Debug.Log("Raycast did not hit any object.");
-        }
-    }
-
-
+    // Toggle Fusion Mode
     public void ToggleFusionMode()
     {
         isFusionModeActive = !isFusionModeActive;
+        fusionScrollView.SetActive(isFusionModeActive);
 
         if (isFusionModeActive)
         {
             Debug.Log("Fusion Mode Activated.");
-            firstSelectedObject = null;
-            secondSelectedObject = null;
+            firstSelectedAsset = null;
+            secondSelectedAsset = null;
+            PopulateFusionScrollView();
         }
         else
         {
             Debug.Log("Fusion Mode Deactivated.");
+        }
+    }
+
+    // Populate the Scroll View with asset buttons
+    private void PopulateFusionScrollView()
+    {
+        // Clear existing buttons
+        foreach (Transform child in contentPanel)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Get assets from AssetListManager
+        AssetListManager assetListManager = FindObjectOfType<AssetListManager>();
+        if (assetListManager == null)
+        {
+            Debug.LogError("AssetListManager not found in the scene.");
+            return;
+        }
+
+        foreach (Asset asset in assetListManager.GetAssets())
+        {
+            GameObject button = Instantiate(assetButtonPrefab, contentPanel);
+            button.transform.localScale = Vector3.one;
+
+            // Set button text
+            TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
+            if (buttonText != null)
+            {
+                buttonText.text = asset.name;
+            }
+
+            // Add click listener
+            button.GetComponent<Button>().onClick.AddListener(() => OnAssetSelected(asset));
+        }
+    }
+
+    // Handle asset selection in Fusion Mode
+    private void OnAssetSelected(Asset asset)
+    {
+        if (firstSelectedAsset == null)
+        {
+            firstSelectedAsset = asset;
+            Debug.Log($"First Asset Selected: {asset.name}");
+        }
+        else if (secondSelectedAsset == null && asset != firstSelectedAsset)
+        {
+            secondSelectedAsset = asset;
+            Debug.Log($"Second Asset Selected: {asset.name}");
+
+            // Both assets selected, initiate fusion process
+            StartFusionProcess();
+        }
+    }
+
+    // Start the fusion process by calling the API
+    private void StartFusionProcess()
+    {
+        if (firstSelectedAsset != null && secondSelectedAsset != null)
+        {
+            string[] fusionWords = { firstSelectedAsset.name, secondSelectedAsset.name };
+            Debug.Log($"Initiating Fusion for: {fusionWords[0]} and {fusionWords[1]}");
+
+            // Call APIManager to generate the fusion object
+            StartCoroutine(apiManager.generateFusionWord(apiManager.apiUrl, fusionWords));
+
+            // Reset after fusion
+            firstSelectedAsset = null;
+            secondSelectedAsset = null;
+
+            // Optionally exit Fusion Mode after initiating fusion
+            ToggleFusionMode();
+        }
+        else
+        {
+            Debug.LogError("Both assets must be selected before starting the fusion process.");
         }
     }
 }

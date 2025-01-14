@@ -43,7 +43,7 @@ public class TaskID
 public class APIManager : MonoBehaviour
 {
 
-    private string apiUrl = "http://51.178.83.2/models/";
+    public string apiUrl = "http://51.178.83.2/models/";
     private TaskID taskID = new TaskID { result ="0193da09-6ca8-7441-8f2d-2e6dec62f401" };
     private string imgPath = Application.dataPath + "/TestRessources/img.jpg"; // test image path
 
