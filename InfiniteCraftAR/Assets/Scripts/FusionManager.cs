@@ -77,7 +77,7 @@ public class FusionManager : MonoBehaviour
                 string[] words = { firstSelectedObject.name, secondSelectedObject.name };
                 Debug.Log(words);
                 //TODO: Change this!
-                StartCoroutine(apiManager.generateFusionWord(apiManager.apiUrl, words));
+               // StartCoroutine(apiManager.generateFusionWord(apiManager.apiUrl, words));
               
                 // Reset selections
                 firstSelectedObject = null;

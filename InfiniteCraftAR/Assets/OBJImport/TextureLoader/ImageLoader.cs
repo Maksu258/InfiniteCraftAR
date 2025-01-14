@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Created by Dummiesman 2013-2019
  * Thanks to mikezila for improving the initial TGA loading code
 */

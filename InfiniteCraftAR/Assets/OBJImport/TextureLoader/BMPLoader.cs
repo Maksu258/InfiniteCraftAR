@@ -1,4 +1,4 @@
-#region License and Information
+﻿#region License and Information
 /*****
 *
 * BMPLoader.cs

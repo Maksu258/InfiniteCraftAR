@@ -178,7 +178,7 @@ public class APIManager : MonoBehaviour
         }
     }
 
-    IEnumerator generateFusionWord(string url, string[] words)
+  public  IEnumerator generateFusionWord(string url, string[] words)
     {
         // Configurer la requ�te
         UnityWebRequest request = new UnityWebRequest(url + "generate-fusion-word", "POST");

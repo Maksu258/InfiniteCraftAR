@@ -15,6 +15,10 @@ public class HomeScreenManager : MonoBehaviour
         SceneManager.LoadScene(mainSceneName);
     }
 
+    public void StartHomeMenu()
+    {
+        SceneManager.LoadScene("HomeMenu");
+    }
     public void ResetProgress()
     {
         Debug.Log("Resetting progress...");

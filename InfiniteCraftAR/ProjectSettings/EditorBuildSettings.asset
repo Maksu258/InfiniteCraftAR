@@ -5,10 +5,13 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
+  - enabled: 1
+    path: Assets/Scenes/HomeMenu.unity
+    guid: 1ee88995298fc2944ad91708292d7b72
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 55daccc09a3b69647bbab145b54a3ab3
-  - enabled: 1
+  - enabled: 0
     path: Assets/Samples/Lynx Core/1.2.0/Handtracking/Scenes/Handtracking.unity
     guid: 5d697469ec0b1094c84fba180e7583fb
   m_configObjects:

@@ -12,6 +12,16 @@
       },
       "hash": "458c96e89cbe7df68e5f2440b8a53e95bd3f3c79"
     },
+    "com.lynx.modules": {
+      "version": "1.1.5",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.lynx.core": "1.1.5",
+        "com.unity.xr.hands": "1.4.1"
+      },
+      "url": "https://package.openupm.com"
+    },
     "com.lynx.previews": {
       "version": "https://github.com/Lynx-MR/UnitySDKPreviews.git?path=/Packages",
       "depth": 0,
@@ -57,7 +67,7 @@
     },
     "com.unity.inputsystem": {
       "version": "1.8.1",
-      "depth": 2,
+      "depth": 0,
       "source": "registry",
       "dependencies": {
         "com.unity.modules.uielements": "1.0.0"
