@@ -55,12 +55,12 @@ public class APIManager : MonoBehaviour
 
     public void AddTextureToObject(GameObject targetObject, string texturePath)
     {
-        // Charger la texture depuis le chemin donné
+        // Charger la texture depuis le chemin donnï¿½
         Texture2D texture = LoadTexture(texturePath);
 
         if (texture != null)
         {
-            // Assurez-vous que l'objet a un Renderer et récupérez son matériel
+            // Assurez-vous que l'objet a un Renderer et rï¿½cupï¿½rez son matï¿½riel
             Renderer renderer = targetObject.GetComponentInChildren<Renderer>();
             if (renderer != null)
             {
@@ -70,16 +70,16 @@ public class APIManager : MonoBehaviour
                 if (shader != null)
                 {
                     material.shader = shader;
-                    Debug.Log("Shader modifié pour Universal Render Pipeline/Lit");
+                    Debug.Log("Shader modifiï¿½ pour Universal Render Pipeline/Lit");
                 }
                 else
                 {
-                    Debug.LogError("Le shader 'Universal Render Pipeline/Lit' n'a pas été trouvé.");
+                    Debug.LogError("Le shader 'Universal Render Pipeline/Lit' n'a pas ï¿½tï¿½ trouvï¿½.");
                     return;
                 }
 
                 material.SetTexture("_BaseMap", texture);
-                Debug.Log("Texture appliquée au matériau");
+                Debug.Log("Texture appliquï¿½e au matï¿½riau");
             }
             else
             {
@@ -88,17 +88,17 @@ public class APIManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("La texture n'a pas pu être chargée.");
+            Debug.LogError("La texture n'a pas pu ï¿½tre chargï¿½e.");
         }
     }
 
     // Fonction pour charger la texture depuis un chemin
     private Texture2D LoadTexture(string path)
     {
-        // Utiliser les méthodes Unity pour charger la texture depuis un chemin de fichier
+        // Utiliser les mï¿½thodes Unity pour charger la texture depuis un chemin de fichier
         byte[] fileData = System.IO.File.ReadAllBytes(path);
         Texture2D texture = new Texture2D(2, 2); // Dimensions temporaires avant de charger l'image
-        texture.LoadImage(fileData); // Charge l'image à partir des données en bytes
+        texture.LoadImage(fileData); // Charge l'image ï¿½ partir des donnï¿½es en bytes
         Debug.Log("texture loaded");
         return texture;
     }
@@ -129,16 +129,16 @@ public class APIManager : MonoBehaviour
 
 
         // Generate with personalized words
-        string[] array = { "plane", "whale" };
+        string[] array = { "Son Goku", "Vegeta" };
         generateFusionObject(array);
 
         // Generate with a screenshot
-        analyzeImage(imgPath);
+        //analyzeImage(imgPath);
     }
 
     IEnumerator postAnalyzeImage(string url, string imagePath, string alreadyKnownObject = null)
     {
-        // Configurer la requête
+        // Configurer la requï¿½te
         UnityWebRequest request = new UnityWebRequest(url + "analyze-image", "POST");
         
         byte[] imageData = File.ReadAllBytes(imagePath);
@@ -150,12 +150,12 @@ public class APIManager : MonoBehaviour
         request.SetRequestHeader("Content-Type", form.headers["Content-Type"]);
         Debug.Log("Size : " + form.data.Length);
         //Debug.Log("Payload : " + jsonPayload);
-        //Debug.Log("En-têtes : Content-Type: application/json, Authorization: Bearer " + apiKey);
+        //Debug.Log("En-tï¿½tes : Content-Type: application/json, Authorization: Bearer " + apiKey);
 
-        // Envoyer la requête
+        // Envoyer la requï¿½te
         yield return request.SendWebRequest();
 
-        // Gestion des erreurs ou des succès
+        // Gestion des erreurs ou des succï¿½s
         if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
         {
             Debug.Log(request);
@@ -164,7 +164,7 @@ public class APIManager : MonoBehaviour
         else
         {
             Debug.Log("POST upload: " + Encoding.UTF8.GetString(request.uploadHandler.data));
-            Debug.Log($"Réponse : {request.downloadHandler.text}");
+            Debug.Log($"Rï¿½ponse : {request.downloadHandler.text}");
             string[] stringArray = JsonUtility.FromJson<Wrapper>(WrapJson(request.downloadHandler.text)).items;
             if(alreadyKnownObject != null)
             {
@@ -180,7 +180,7 @@ public class APIManager : MonoBehaviour
 
     IEnumerator generateFusionWord(string url, string[] words)
     {
-        // Configurer la requête
+        // Configurer la requï¿½te
         UnityWebRequest request = new UnityWebRequest(url + "generate-fusion-word", "POST");
 
         WWWForm form = new WWWForm();
@@ -192,27 +192,27 @@ public class APIManager : MonoBehaviour
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", form.headers["Content-Type"]);
 
-        // Envoyer la requête
+        // Envoyer la requï¿½te
         yield return request.SendWebRequest();
 
-        // Gestion des erreurs ou des succès
+        // Gestion des erreurs ou des succï¿½s
         if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
         {
             Debug.Log(request);
             Debug.LogError($"Erreur : {request.error}");
-            Debug.Log($"Réponse : {request.downloadHandler.text}");
+            Debug.Log($"Rï¿½ponse : {request.downloadHandler.text}");
         }
         else
         {
             Debug.Log("POST upload: " + Encoding.UTF8.GetString(request.uploadHandler.data));
-            Debug.Log($"Réponse : {request.downloadHandler.text}");
+            Debug.Log($"Rï¿½ponse : {request.downloadHandler.text}");
             StartCoroutine(get3DObject(url, request.downloadHandler.text));
         }
     }
 
     IEnumerator get3DObject(string url, string word)
     {
-        // Configurer la requête
+        // Configurer la requï¿½te
         UnityWebRequest request = new UnityWebRequest(url + "get3d-object/" + word, "GET");
 
         request.downloadHandler = new DownloadHandlerBuffer();
@@ -220,12 +220,12 @@ public class APIManager : MonoBehaviour
 
         request.timeout = 10000000;
 
-        // Envoyer la requête
+        // Envoyer la requï¿½te
         yield return request.SendWebRequest();
 
         if (request.result != UnityWebRequest.Result.Success)
         {
-            Debug.LogError($"Erreur lors du téléchargement : {request.error}");
+            Debug.LogError($"Erreur lors du tï¿½lï¿½chargement : {request.error}");
             yield break;
         }
         if (request.responseCode == 504)
@@ -266,7 +266,7 @@ public class APIManager : MonoBehaviour
 
     IEnumerator getTexture(string url, int id)
     {
-        // Configurer la requête
+        // Configurer la requï¿½te
         UnityWebRequest request = new UnityWebRequest(url + "get-texture/" + id, "GET");
 
         request.downloadHandler = new DownloadHandlerBuffer();
@@ -274,15 +274,15 @@ public class APIManager : MonoBehaviour
 
         request.timeout = 10000000;
 
-        //Debug.Log("En-têtes : Content-Type: application/json, Authorization: Bearer " + apiKey);
+        //Debug.Log("En-tï¿½tes : Content-Type: application/json, Authorization: Bearer " + apiKey);
 
-        // Envoyer la requête
+        // Envoyer la requï¿½te
         yield return request.SendWebRequest();
 
         if (request.result != UnityWebRequest.Result.Success)
         {
             if(request.error == "")
-            Debug.LogError($"Erreur lors du téléchargement : {request.error}");
+            Debug.LogError($"Erreur lors du tï¿½lï¿½chargement : {request.error}");
         }
         if (request.responseCode == 504)
         {
@@ -300,7 +300,7 @@ public class APIManager : MonoBehaviour
 
         if (furniture.pngUrl == null || furniture.pngUrl == "")
         {
-            Debug.Log("Aucune texture n'a été générée");
+            Debug.Log("Aucune texture n'a ï¿½tï¿½ gï¿½nï¿½rï¿½e");
         }
         else
         {
@@ -312,7 +312,7 @@ public class APIManager : MonoBehaviour
 
     IEnumerator DownloadObjFromUrlRequest(string url, string name, string extention)
     {
-        // Configurer la requête
+        // Configurer la requï¿½te
         UnityWebRequest request = new UnityWebRequest(url, "GET");
 
         request.downloadHandler = new DownloadHandlerBuffer();
@@ -320,14 +320,14 @@ public class APIManager : MonoBehaviour
 
         //Debug.Log("URL : " + url + "/" + taskID);
         //Debug.Log("Payload : " + jsonPayload);
-        //Debug.Log("En-têtes : Content-Type: application/json, Authorization: Bearer " + apiKey);
+        //Debug.Log("En-tï¿½tes : Content-Type: application/json, Authorization: Bearer " + apiKey);
 
-        // Envoyer la requête
+        // Envoyer la requï¿½te
         yield return request.SendWebRequest();
 
         if (request.result != UnityWebRequest.Result.Success)
         {
-            Debug.LogError($"Erreur lors du téléchargement : {request.error}");
+            Debug.LogError($"Erreur lors du tï¿½lï¿½chargement : {request.error}");
             yield break;
         }
 
@@ -346,13 +346,13 @@ public class APIManager : MonoBehaviour
 
     void instantiate3DObj(string objPath, string pngPath = null)
     {
-        // Vérifier si l'objet existe déjà dans la scène
+        // Vï¿½rifier si l'objet existe dï¿½jï¿½ dans la scï¿½ne
         string objectName = Path.GetFileNameWithoutExtension(objPath);
         GameObject existingObj = GameObject.Find(objectName);
 
         if (existingObj != null)
         {
-            Debug.Log("L'objet existe déjà dans la scène : " + objectName);
+            Debug.Log("L'objet existe dï¿½jï¿½ dans la scï¿½ne : " + objectName);
             if(pngPath != null)
             {
                 Debug.Log("Adding texture to existing object");
@@ -371,11 +371,11 @@ public class APIManager : MonoBehaviour
                 Debug.Log("Adding texture to object");
                 AddTextureToObject(loadedObj, pngPath);
             }
-            Debug.Log("Objet 3D instancié : " + objectName);
+            Debug.Log("Objet 3D instanciï¿½ : " + objectName);
         }
         else
         {
-            Debug.LogError("Impossible de charger l'objet à partir du chemin spécifié.");
+            Debug.LogError("Impossible de charger l'objet ï¿½ partir du chemin spï¿½cifiï¿½.");
         }
     }
 

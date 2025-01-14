@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class PictureCam : MonoBehaviour
@@ -51,15 +52,32 @@ public class PictureCam : MonoBehaviour
             eyedropperCamera.transform.rotation = eyedropperCamera.transform.rotation;
             eyedropperCamera.Render();
             eyedropperTexture.ReadPixels(new Rect(0, 0, eyedropperCamera.targetTexture.width, eyedropperCamera.targetTexture.height), 0, 0);
+            eyedropperTexture.Apply();
         }
         finally
         {
             RenderTexture.active = currentRT;
         }
 
-        string name = "Screenshot_EpicApp" + System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".png";
+        if (saveImage)
+        {
+            string directoryPath = "/storage/emulated/0/DCIM/Lynx/ScreenAndVideoShots";
 
-        NativeGallery.SaveImageToGallery(eyedropperTexture, "Myapp pictures", name);
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+
+            string fileName = "Screenshot_EpicApp_" + System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".png";
+            string filePath = Path.Combine(directoryPath, fileName);
+
+            // Encode the texture into PNG format
+            byte[] bytes = eyedropperTexture.EncodeToPNG();
+
+            // Save the file to the specified path
+            File.WriteAllBytes(filePath, bytes);
+
+            Debug.Log("Image saved to: " + filePath);
+        }
     }
-
 }
