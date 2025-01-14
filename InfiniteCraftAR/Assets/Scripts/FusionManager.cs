@@ -76,6 +76,7 @@ public class FusionManager : MonoBehaviour
                 // Start the API call via APIManager
                 string[] words = { firstSelectedObject.name, secondSelectedObject.name };
                 Debug.Log(words);
+                //TODO: Change this!
                 StartCoroutine(apiManager.generateFusionWord(apiManager.apiUrl, words));
               
                 // Reset selections

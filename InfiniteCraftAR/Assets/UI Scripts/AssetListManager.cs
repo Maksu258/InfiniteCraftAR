@@ -1,77 +1,94 @@
+using System.IO;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
-using System.IO;
+using TMPro;
 
 public class AssetListManager : MonoBehaviour
 {
     [Header("UI Components")]
-    public GameObject assetButtonPrefab;  // Prefab for the buttons
+    public GameObject assetButtonPrefab;  // Prefab for asset buttons
     public Transform contentPanel;       // Parent container for buttons
 
-    [Header("File System")]
-    public string objectsFolderPath = "Assets/Objects"; // Path to the Objects folder
+    [Header("File Paths")]
+    public string objectsFolderPath = "Assets/Objects";      // Path to Objects folder
+    public string permanentFolderPath = "Assets/Objects/Perm"; // Path to permanent subfolder
 
-    private List<Asset> assets = new List<Asset>(); // List to store all assets
+    private List<Asset> assets = new List<Asset>(); // List to store loaded assets
 
     void Start()
     {
-        LoadAssetsFromObjectsFolder();
+        LoadAssets();
         PopulateAssetList();
     }
 
-    // Load assets dynamically from the Objects folder
-    void LoadAssetsFromObjectsFolder()
+    // Load all assets from the Objects and Perm folders
+    void LoadAssets()
     {
-        if (!Directory.Exists(objectsFolderPath))
+        assets.Clear();
+
+        // Load non-permanent assets
+        LoadAssetsFromFolder(objectsFolderPath, false);
+
+        // Load permanent assets
+        LoadAssetsFromFolder(permanentFolderPath, true);
+    }
+
+    // Helper function to load assets from a specified folder
+    void LoadAssetsFromFolder(string folderPath, bool isPermanent)
+    {
+        if (!Directory.Exists(folderPath))
         {
-            Debug.LogError($"Objects folder not found at: {objectsFolderPath}");
+            Debug.LogError($"Folder not found: {folderPath}");
             return;
         }
 
-        string[] objFiles = Directory.GetFiles(objectsFolderPath, "*.obj");
-
-        foreach (string objFilePath in objFiles)
+        string[] files = Directory.GetFiles(folderPath, "*.obj", SearchOption.AllDirectories);
+        foreach (string filePath in files)
         {
-            string assetName = Path.GetFileNameWithoutExtension(objFilePath);
-            string relativePath = objFilePath.Replace("\\", "/");
-
-            // Create a placeholder GameObject for now (can use a real OBJ loader later)
-            GameObject placeholderModel = new GameObject(assetName);
-
-            // Add the asset to the list
-            assets.Add(new Asset(assetName, relativePath, placeholderModel));
+            string assetName = Path.GetFileNameWithoutExtension(filePath);
+            assets.Add(new Asset(assetName, filePath, isPermanent));
         }
     }
 
     // Populate the Scroll View with buttons
     void PopulateAssetList()
     {
+        foreach (Transform child in contentPanel)
+        {
+            Destroy(child.gameObject); // Clear existing buttons
+        }
+
         foreach (Asset asset in assets)
         {
             GameObject button = Instantiate(assetButtonPrefab, contentPanel);
             button.transform.localScale = Vector3.one;
 
-            // Set the button's text
-            Text buttonText = button.GetComponentInChildren<Text>();
-            buttonText.text = asset.name;
+            // Set button text to the asset name (using TextMeshPro)
+            TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
+            if (buttonText != null)
+            {
+                buttonText.text = asset.name;
+            }
+            else
+            {
+                Debug.LogError("Button prefab is missing a TextMeshProUGUI component.");
+            }
 
-            // Add a click event to spawn the asset
+            // Add an OnClick listener to spawn the asset
             button.GetComponent<Button>().onClick.AddListener(() => SpawnAsset(asset));
         }
     }
 
-    // Spawn the asset into the scene
-    public void SpawnAsset(Asset asset)
+    // Spawn the selected asset into the scene
+    void SpawnAsset(Asset asset)
     {
         Debug.Log($"Spawning asset: {asset.name}");
 
-        // Load the actual 3D object from the file
         GameObject loadedObject = LoadObjFromFile(asset.path);
-
         if (loadedObject != null)
         {
-            Vector3 spawnPosition = new Vector3(0, 0, 0); // Change to your desired spawn position
+            Vector3 spawnPosition = new Vector3(0, 0, 0); // Adjust position as needed
             Instantiate(loadedObject, spawnPosition, Quaternion.identity);
         }
         else
@@ -80,37 +97,70 @@ public class AssetListManager : MonoBehaviour
         }
     }
 
-    // Load the OBJ file and return a GameObject
+    // Load an OBJ file and return a GameObject
     private GameObject LoadObjFromFile(string filePath)
     {
-        // Use a real OBJ loader (e.g., Dummiesman.OBJLoader) to load the model
         if (File.Exists(filePath))
         {
             Debug.Log($"Loading OBJ file: {filePath}");
             var objLoader = new Dummiesman.OBJLoader();
-            GameObject loadedObj = objLoader.Load(filePath);
-            return loadedObj;
+            return objLoader.Load(filePath);
         }
         else
         {
-            Debug.LogError($"OBJ file not found: {filePath}");
+            Debug.LogError($"File not found: {filePath}");
             return null;
         }
     }
+
+    // Clear all non-permanent objects from the Objects folder
+    public void ClearNonPermanentObjects()
+    {
+        Debug.Log("Clearing non-permanent objects...");
+
+        if (!Directory.Exists(objectsFolderPath))
+        {
+            Debug.LogError($"Objects folder not found at: {objectsFolderPath}");
+            return;
+        }
+
+        string[] files = Directory.GetFiles(objectsFolderPath, "*.*", SearchOption.AllDirectories);
+
+        foreach (string filePath in files)
+        {
+            if (!IsPermanent(filePath))
+            {
+                Debug.Log($"Deleting: {filePath}");
+                File.Delete(filePath);
+            }
+        }
+
+        // Reload the asset list after clearing
+        LoadAssets();
+        PopulateAssetList();
+    }
+
+    // Determine if a file is in the permanent folder
+    private bool IsPermanent(string filePath)
+    {
+        string fullPermanentPath = Path.GetFullPath(permanentFolderPath);
+        string fullFilePath = Path.GetFullPath(filePath);
+        return fullFilePath.StartsWith(fullPermanentPath);
+    }
 }
 
-// Asset class to store asset data
+// Asset class to represent assets in the list
 [System.Serializable]
 public class Asset
 {
-    public string name;   // Name of the asset
-    public string path;   // Path to the OBJ file
-    public GameObject model; // Placeholder or actual loaded model
+    public string name; // Asset name
+    public string path; // Path to the asset file
+    public bool isPermanent; // Indicates if the asset is permanent
 
-    public Asset(string name, string path, GameObject model)
+    public Asset(string name, string path, bool isPermanent)
     {
         this.name = name;
         this.path = path;
-        this.model = model;
+        this.isPermanent = isPermanent;
     }
 }
