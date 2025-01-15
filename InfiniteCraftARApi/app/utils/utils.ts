@@ -100,6 +100,8 @@ export function getCommonLabelsSummary(
 }
 
 export async function generateFusionWord(word1: string, word2: string) {
+  word1 = encodeURIComponent(word1)
+  word2 = encodeURIComponent(word2)
   const urlInfiniteCraft = `https://infiniteback.org/pair?first=${word1}&second=${word2}`
 
   logger.info('Url infinite craft: ' + urlInfiniteCraft)
@@ -107,14 +109,14 @@ export async function generateFusionWord(word1: string, word2: string) {
 
   if (!response.ok) {
     logger.error('Error generating fusion word', response)
-    return { result: 'Nothing', emoji: '' }
+    return 'Nothing'
   }
-  if (response == null) {
+  const data: any = await response.json()
+  if (data == null) {
     logger.info('No fusion for ' + word1 + ' and ' + word2)
-    return { result: 'Nothing', emoji: '' }
+    return 'Nothing'
   }
 
-  const data: any = await response.json()
   logger.info('Data infinite craft: ' + data)
   return data.result
 }
