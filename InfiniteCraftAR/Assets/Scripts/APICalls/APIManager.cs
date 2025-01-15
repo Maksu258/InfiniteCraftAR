@@ -164,15 +164,16 @@ public class APIManager : MonoBehaviour
         // Envoyer la requ�te
         yield return request.SendWebRequest();
 
-        if (request.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError($"Erreur lors du t�l�chargement : {request.error}");
-            yield break;
-        }
+        
         if (request.responseCode == 504)
         {
             Debug.Log("Erreur 504 : Gateway Timeout");
             yield return StartCoroutine(get3DObject(url, word));
+            yield break;
+        }
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError($"Erreur lors du t�l�chargement : {request.error}");
             yield break;
         }
 
