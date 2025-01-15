@@ -27,7 +27,7 @@ public class FusionManager : MonoBehaviour
         // Ensure the Scroll View is initially hidden
         if (fusionScrollView != null)
         {
-            fusionScrollView.SetActive(false);
+            fusionScrollView.SetActive(true);
         }
     }
 
