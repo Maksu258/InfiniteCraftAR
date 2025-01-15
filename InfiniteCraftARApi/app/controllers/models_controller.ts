@@ -190,6 +190,12 @@ export default class ModelsController {
       should_remesh: true,
     }
 
+    model = await Model.create({
+      name: decodedWord,
+      modelUrl: '',
+      mtlUrl: '',
+    })
+
     let modelTaskId = null
 
     try {
@@ -281,11 +287,9 @@ export default class ModelsController {
       return response.status(500).send({ error: 'Error fetching texture' })
     }
 
-    model = await Model.create({
-      name: decodedWord,
-      modelUrl: s3ObjUrl,
-      mtlUrl: textureId,
-    })
+    model.modelUrl = s3ObjUrl
+    model.mtlUrl = textureId
+    await model.save()
 
     logger.info('Model created successfully for model: ' + decodedWord, model.toJSON())
     logger.info('========================================')
