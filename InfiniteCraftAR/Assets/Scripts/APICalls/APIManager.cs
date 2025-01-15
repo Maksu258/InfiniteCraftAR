@@ -118,7 +118,7 @@ public class APIManager : MonoBehaviour
         }
     }
 
-  public  IEnumerator generateFusionWord(string url, string[] words)
+  public IEnumerator generateFusionWord(string url, string[] words)
     {
         // Configurer la requ�te
         UnityWebRequest request = new UnityWebRequest(url + "generate-fusion-word", "POST");
@@ -146,6 +146,7 @@ public class APIManager : MonoBehaviour
         {
             Debug.Log("POST upload: " + Encoding.UTF8.GetString(request.uploadHandler.data));
             Debug.Log($"R�ponse : {request.downloadHandler.text}");
+            Utils.InstantiateCylinderWithText(request.downloadHandler.text, mainCamera);
             StartCoroutine(get3DObject(url, request.downloadHandler.text));
         }
     }

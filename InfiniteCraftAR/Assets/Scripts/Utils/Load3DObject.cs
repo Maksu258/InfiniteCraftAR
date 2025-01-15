@@ -11,6 +11,7 @@ public static class Utils
         // V�rifier si l'objet existe d�j� dans la sc�ne
         string objectName = Path.GetFileNameWithoutExtension(objPath);
         GameObject existingObj = GameObject.Find(objectName);
+        GameObject dummyObj = GameObject.Find(objectName +"Dummy");
 
         if (existingObj != null)
         {
@@ -21,6 +22,11 @@ public static class Utils
                 AddTextureToObject(existingObj, pngPath);
             }
             return;
+        }
+
+        if(dummyObj != null)
+        {
+            GameObject.Destroy(dummyObj);
         }
 
         var loadedObj = new OBJLoader().Load(objPath);
@@ -40,6 +46,45 @@ public static class Utils
             Debug.LogError("Impossible de charger l'objet à partir du chemin sp�cifi�.");
         }
     }
+
+    public static void InstantiateCylinderWithText(string name, GameObject camera = null)
+    {
+        // Vérifier si l'objet existe déjà dans la scène avec ce nom
+        GameObject existingObj = GameObject.Find(name + "Dummy");
+        if (existingObj != null)
+        {
+            Debug.Log("L'objet existe déjà dans la scène : " + name);
+            return;
+        }
+
+        // Créer le cylindre
+        GameObject cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        cylinder.name = name + "Dummy";
+
+        // Positionner le cylindre devant la caméra
+        if (camera != null)
+        {
+            PositionObjectInFrontOfCamera(cylinder, camera);
+        }
+
+        // Créer un objet texte 3D (TextMesh) pour afficher le texte au-dessus du cylindre
+        GameObject textObject = new GameObject("TextObject");
+        textObject.transform.parent = cylinder.transform;  // Assigner le texte comme enfant du cylindre
+
+        TextMesh textMesh = textObject.AddComponent<TextMesh>();
+        textMesh.text = name;
+        textMesh.fontSize = 10;
+        textMesh.anchor = TextAnchor.MiddleCenter;
+        textMesh.alignment = TextAlignment.Center;
+        textObject.transform.localPosition = new Vector3(0, 2f, 0);  // Positionner le texte au-dessus du cylindre
+
+        // Optionnel : Vous pouvez modifier d'autres propriétés du texte, comme la couleur ou la police
+        textMesh.color = Color.black;
+
+        Debug.Log("Dummyu object created : " + name);
+    }
+
+
 
     private static void PositionObjectInFrontOfCamera(GameObject obj, GameObject camera)
     {
