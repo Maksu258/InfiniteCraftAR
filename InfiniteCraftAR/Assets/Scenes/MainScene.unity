@@ -476,7 +476,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1199981872}
   m_HandleRect: {fileID: 1199981871}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -932,7 +932,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8242576333580620238, guid: 114e5916a3c45754bad3ed2da6d69f2e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -1364,6 +1365,14 @@ PrefabInstance:
     - target: {fileID: 6901087677220589436, guid: 79f3dfd3f0a52384a9d9306ee831c775, type: 3}
       propertyPath: m_SizeDelta.y
       value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6901087677220589436, guid: 79f3dfd3f0a52384a9d9306ee831c775, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 6901087677220589436, guid: 79f3dfd3f0a52384a9d9306ee831c775, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.8
       objectReference: {fileID: 0}
     - target: {fileID: 6901087677220589436, guid: 79f3dfd3f0a52384a9d9306ee831c775, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3218,7 +3227,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.00033391916, y: -0.00008265298}
+  m_AnchoredPosition: {x: -0.00029526965, y: -0.00004196167}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1050870297
@@ -3879,7 +3888,7 @@ PrefabInstance:
     - target: {fileID: 1961420170104328907, guid: 454b434e34202de41a269c9fdedd61b0, type: 3}
       propertyPath: OnUnpress.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 483339220}
     - target: {fileID: 1961420170104328907, guid: 454b434e34202de41a269c9fdedd61b0, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -4394,7 +4403,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e971f6dfa5ed0942a3daa7112e65691, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainCamera: {fileID: 0}
+  mainCamera: {fileID: 1200492190}
   apiUrl: http://51.178.83.2/models/
 --- !u!224 &1346460783
 RectTransform:
@@ -5709,7 +5718,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36460ab0c9f378f478ccec73828bb2b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  camera: {fileID: 0}
+  camera: {fileID: 1200492190}
   assetButtonPrefab: {fileID: 2340416564190629140, guid: ed20bfaa4d9f4564a9867139503a2632, type: 3}
   contentPanel: {fileID: 1753637946}
   objectsFolderPath: Assets/Objects
