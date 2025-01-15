@@ -102,23 +102,19 @@ export function getCommonLabelsSummary(
 export async function generateFusionWord(word1: string, word2: string) {
   const urlInfiniteCraft = `https://infiniteback.org/pair?first=${word1}&second=${word2}`
 
-  try {
-    const response = await fetch(urlInfiniteCraft, { method: 'GET' })
+  const response = await fetch(urlInfiniteCraft, { method: 'GET' })
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`)
-    }
-    if (response == null) {
-      logger.info('No fusion for ' + word1 + ' and ' + word2)
-      return null
-    }
-
-    const data: any = await response.json()
-    return data.result
-  } catch (error) {
-    logger.error('Error generating fusion word', error)
-    throw error
+  if (!response.ok) {
+    logger.error('Error generating fusion word', response)
+    return { result: 'Nothing', emoji: '' }
   }
+  if (response == null) {
+    logger.info('No fusion for ' + word1 + ' and ' + word2)
+    return { result: 'Nothing', emoji: '' }
+  }
+
+  const data: any = await response.json()
+  return data.result
 }
 
 export async function retrieve3dTask(taskId: string, headers: any) {
