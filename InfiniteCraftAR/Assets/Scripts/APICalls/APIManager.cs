@@ -105,7 +105,7 @@ public class APIManager : MonoBehaviour
 
     public void analyzeImage(string imagePath)
     {
-        StartCoroutine(postAnalyzeImage(apiUrl, imgPath));
+        StartCoroutine(postAnalyzeImage(apiUrl, imagePath));
     }
 
     public void generateFusionObject(string[] words)
@@ -129,8 +129,8 @@ public class APIManager : MonoBehaviour
 
 
         // Generate with personalized words
-        string[] array = { "Son Goku", "Vegeta" };
-        generateFusionObject(array);
+        // string[] array = {"Vegeta","Son Goku"};
+        // generateFusionObject(array);
 
         // Generate with a screenshot
         //analyzeImage(imgPath);
@@ -139,6 +139,8 @@ public class APIManager : MonoBehaviour
     IEnumerator postAnalyzeImage(string url, string imagePath, string alreadyKnownObject = null)
     {
         // Configurer la requ�te
+        
+        Debug.Log(imagePath);
         UnityWebRequest request = new UnityWebRequest(url + "analyze-image", "POST");
         
         byte[] imageData = File.ReadAllBytes(imagePath);

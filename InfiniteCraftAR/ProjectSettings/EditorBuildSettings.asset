@@ -8,12 +8,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/HomeMenu.unity
     guid: 1ee88995298fc2944ad91708292d7b72
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 55daccc09a3b69647bbab145b54a3ab3
   - enabled: 0
     path: Assets/Samples/Lynx Core/1.2.0/Handtracking/Scenes/Handtracking.unity
     guid: 5d697469ec0b1094c84fba180e7583fb
+  - enabled: 1
+    path: Assets/Scenes/MainScene.unity
+    guid: 0d9c5d8a2b6107544a143dd2dc709c28
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: bfa1182bd221b4ca89619141f66f1260, type: 2}
     Unity.XR.WindowsMR.Settings: {fileID: 11400000, guid: dc5a169419fa04987b057f65238cf3ba, type: 2}

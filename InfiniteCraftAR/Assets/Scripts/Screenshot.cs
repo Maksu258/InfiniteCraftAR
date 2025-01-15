@@ -1,83 +1,47 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
+using Lynx;
 
-public class PictureCam : MonoBehaviour
+public class Screenshot : MonoBehaviour
 {
-    public Camera eyedropperCamera;
+    public APIManager api;
 
-    private Texture2D eyedropperTexture;
-    private Rect eyeRect;
-    private bool firstGetPixel = true;
-    private RenderTexture eyedropperRenderTexture;
+    public GameObject mainCamera;
 
-    public void Trigger1()
+    public ScreenshotAndVideoUtilities screenUtils;
+
+    public void Trigger()
     {
-        StartCoroutine(TriggerTimeX());
+        screenUtils = new ScreenshotAndVideoUtilities();
+        screenUtils.m_cameraGameObjectForScreenShot = mainCamera;
+        // api = new APIManager();
+        Debug.Log("Start Screenshot");
+        screenUtils.TakeScreenShot(1024,1024);
+        Debug.Log("End Screenshot");
+
+        string folderPath = Path.Combine(Application.dataPath, "ScreenAndVideoShots");
+        if (!Directory.Exists(folderPath))
+        {
+            Debug.LogWarning("No screenshot in " + folderPath);
+            return;
+        }
+        string latestFilePath = GetLatestFilePath(folderPath);
+
+        api.analyzeImage(latestFilePath);
     }
 
-    public IEnumerator TriggerTimeX()
+    public string GetLatestFilePath(string folderPath)
     {
-        yield return new WaitForSeconds(2);
-        StartCoroutine(GetPixel(true));
-        yield return new WaitForSeconds(1);
-        StartCoroutine(GetPixel(true));
-    }
+        var files = Directory.GetFiles(folderPath);
 
-    public IEnumerator GetPixel(bool saveImage)
-    {
-        yield return new WaitForEndOfFrame();
+        var latestFile = files
+            .Select(file => new FileInfo(file))
+            .OrderByDescending(fileInfo => fileInfo.LastWriteTime)
+            .FirstOrDefault();
 
-        if (firstGetPixel)
-        {
-            firstGetPixel = false;
-
-            eyedropperTexture = new Texture2D(Screen.width, Screen.height, TextureFormat.ARGB32, false);
-            eyeRect = new Rect(0, 0, Screen.width, Screen.height);
-
-            eyedropperRenderTexture = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32);
-            eyedropperRenderTexture.Create();
-
-            eyedropperCamera.targetTexture = eyedropperRenderTexture;
-            eyedropperCamera.enabled = false;
-        }
-
-        RenderTexture currentRT = RenderTexture.active;
-        try
-        {
-            RenderTexture.active = eyedropperCamera.targetTexture;
-            eyedropperCamera.backgroundColor = eyedropperCamera.backgroundColor;
-            eyedropperCamera.transform.position = eyedropperCamera.transform.position;
-            eyedropperCamera.transform.rotation = eyedropperCamera.transform.rotation;
-            eyedropperCamera.Render();
-            eyedropperTexture.ReadPixels(new Rect(0, 0, eyedropperCamera.targetTexture.width, eyedropperCamera.targetTexture.height), 0, 0);
-            eyedropperTexture.Apply();
-        }
-        finally
-        {
-            RenderTexture.active = currentRT;
-        }
-
-        if (saveImage)
-        {
-            string directoryPath = "/storage/emulated/0/DCIM/Lynx/ScreenAndVideoShots";
-
-            if (!Directory.Exists(directoryPath))
-            {
-                Directory.CreateDirectory(directoryPath);
-            }
-
-            string fileName = "Screenshot_EpicApp_" + System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".png";
-            string filePath = Path.Combine(directoryPath, fileName);
-
-            // Encode the texture into PNG format
-            byte[] bytes = eyedropperTexture.EncodeToPNG();
-
-            // Save the file to the specified path
-            File.WriteAllBytes(filePath, bytes);
-
-            Debug.Log("Image saved to: " + filePath);
-        }
+        return latestFile?.FullName;
     }
 }
