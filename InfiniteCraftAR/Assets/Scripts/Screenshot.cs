@@ -14,7 +14,9 @@ public class Screenshot : MonoBehaviour
     public ScreenshotAndVideoUtilities screenUtils;
 
     public void Trigger()
-    {
+    {        
+        StartCoroutine(WaitForTwoSeconds());
+        
         screenUtils = new ScreenshotAndVideoUtilities();
         screenUtils.m_cameraGameObjectForScreenShot = mainCamera;
         // api = new APIManager();
@@ -25,12 +27,20 @@ public class Screenshot : MonoBehaviour
         string folderPath = Path.Combine(Application.dataPath, "ScreenAndVideoShots");
         if (!Directory.Exists(folderPath))
         {
-            Debug.LogWarning("No screenshot in " + folderPath);
-            return;
+            if (Directory.Exists("/Internal shared storage/DCIM/Lynx/ScreenAndVideoShots"))
+                {
+                    folderPath="/Internal shared storage/DCIM/Lynx/ScreenAndVideoShots";
+                }
+            else{
+                Debug.LogWarning("No screenshot in " + folderPath);
+                return;
+            }
         }
+        
         string latestFilePath = GetLatestFilePath(folderPath);
 
         api.analyzeImage(latestFilePath);
+        
     }
 
     public string GetLatestFilePath(string folderPath)
@@ -43,5 +53,17 @@ public class Screenshot : MonoBehaviour
             .FirstOrDefault();
 
         return latestFile?.FullName;
+    }
+
+    IEnumerator WaitForTwoSeconds()
+    {
+        // Afficher un message avant l'attente
+        Debug.Log("Début de l'attente...");
+
+        // Attendre pendant 2 secondes
+        yield return new WaitForSeconds(2);
+
+        // Afficher un message après l'attente
+        Debug.Log("2 secondes écoulées !");
     }
 }
