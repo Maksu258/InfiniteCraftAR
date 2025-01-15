@@ -19,11 +19,7 @@ public class FusionManager : MonoBehaviour
     void Start()
     {
         // Set up the Fusion Button
-        if (fusionButton != null)
-        {
-            fusionButton.GetComponent<Button>().onClick.AddListener(ToggleFusionMode);
-        }
-
+  
         // Ensure the Scroll View is initially hidden
         if (fusionScrollView != null)
         {
@@ -37,6 +33,10 @@ public class FusionManager : MonoBehaviour
         isFusionModeActive = !isFusionModeActive;
         fusionScrollView.SetActive(isFusionModeActive);
 
+
+
+        Debug.Log(isFusionModeActive);
+
         if (isFusionModeActive)
         {
             Debug.Log("Fusion Mode Activated.");
@@ -48,6 +48,7 @@ public class FusionManager : MonoBehaviour
         {
             Debug.Log("Fusion Mode Deactivated.");
         }
+       
     }
 
     // Populate the Scroll View with asset buttons
