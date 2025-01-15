@@ -105,20 +105,27 @@ export async function generateFusionWord(word1: string, word2: string) {
   const urlInfiniteCraft = `https://infiniteback.org/pair?first=${word1}&second=${word2}`
 
   logger.info('Url infinite craft: ' + urlInfiniteCraft)
-  const response = await fetch(urlInfiniteCraft, { method: 'GET' })
 
-  if (!response.ok) {
-    logger.error('Error generating fusion word', response)
-    return 'Nothing'
-  }
-  const data: any = await response.json()
-  if (data == null) {
-    logger.info('No fusion for ' + word1 + ' and ' + word2)
-    return 'Nothing'
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const response = await fetch(urlInfiniteCraft, { method: 'GET' })
+
+    if (!response.ok) {
+      logger.error('Error generating fusion word', response)
+      return 'Nothing'
+    }
+
+    const data: any = await response.json()
+    if (data != null) {
+      logger.info('Data infinite craft: ' + data)
+      return data.result
+    }
+
+    logger.info('No fusion for ' + word1 + ' and ' + word2 + ', retrying...')
+    await new Promise((resolve) => setTimeout(resolve, 3000))
   }
 
-  logger.info('Data infinite craft: ' + data)
-  return data.result
+  logger.info('No fusion for ' + word1 + ' and ' + word2 + ' after 10 attempts')
+  return 'Nothing'
 }
 
 export async function retrieve3dTask(taskId: string, headers: any) {
