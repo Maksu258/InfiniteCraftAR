@@ -106,7 +106,7 @@ export async function generateFusionWord(word1: string, word2: string) {
 
   logger.info('Url infinite craft: ' + urlInfiniteCraft)
 
-  for (let attempt = 0; attempt < 10; attempt++) {
+  for (let attempt = 0; attempt < 20; attempt++) {
     const response = await fetch(urlInfiniteCraft, { method: 'GET' })
 
     if (!response.ok) {
@@ -121,7 +121,7 @@ export async function generateFusionWord(word1: string, word2: string) {
     }
 
     logger.info('No fusion for ' + word1 + ' and ' + word2 + ', retrying...')
-    await new Promise((resolve) => setTimeout(resolve, 3000))
+    await new Promise((resolve) => setTimeout(resolve, 5000))
   }
 
   logger.info('No fusion for ' + word1 + ' and ' + word2 + ' after 10 attempts')
