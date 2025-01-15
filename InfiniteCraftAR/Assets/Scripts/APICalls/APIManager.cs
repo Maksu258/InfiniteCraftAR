@@ -4,7 +4,6 @@ using System.Text;
 using System.Collections;
 using System.IO;
 using System;
-using Dummiesman;
 
 public class Payload
 {
@@ -43,6 +42,8 @@ public class TaskID
 public class APIManager : MonoBehaviour
 {
 
+
+    public GameObject mainCamera;
     public string apiUrl = "http://51.178.83.2/models/";
     private TaskID taskID = new TaskID { result ="0193da09-6ca8-7441-8f2d-2e6dec62f401" };
     private string imgPath = Application.dataPath + "/TestRessources/img.jpg"; // test image path
@@ -53,55 +54,6 @@ public class APIManager : MonoBehaviour
     }
 
 
-    public void AddTextureToObject(GameObject targetObject, string texturePath)
-    {
-        // Charger la texture depuis le chemin donn�
-        Texture2D texture = LoadTexture(texturePath);
-
-        if (texture != null)
-        {
-            // Assurez-vous que l'objet a un Renderer et r�cup�rez son mat�riel
-            Renderer renderer = targetObject.GetComponentInChildren<Renderer>();
-            if (renderer != null)
-            {
-                Material material = renderer.material;
-
-                Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-                if (shader != null)
-                {
-                    material.shader = shader;
-                    Debug.Log("Shader modifi� pour Universal Render Pipeline/Lit");
-                }
-                else
-                {
-                    Debug.LogError("Le shader 'Universal Render Pipeline/Lit' n'a pas �t� trouv�.");
-                    return;
-                }
-
-                material.SetTexture("_BaseMap", texture);
-                Debug.Log("Texture appliqu�e au mat�riau");
-            }
-            else
-            {
-                Debug.LogWarning("L'objet n'a pas de Renderer.");
-            }
-        }
-        else
-        {
-            Debug.LogError("La texture n'a pas pu �tre charg�e.");
-        }
-    }
-
-    // Fonction pour charger la texture depuis un chemin
-    private Texture2D LoadTexture(string path)
-    {
-        // Utiliser les m�thodes Unity pour charger la texture depuis un chemin de fichier
-        byte[] fileData = System.IO.File.ReadAllBytes(path);
-        Texture2D texture = new Texture2D(2, 2); // Dimensions temporaires avant de charger l'image
-        texture.LoadImage(fileData); // Charge l'image � partir des donn�es en bytes
-        Debug.Log("texture loaded");
-        return texture;
-    }
 
     public void analyzeImage(string imagePath)
     {
@@ -113,21 +65,7 @@ public class APIManager : MonoBehaviour
         StartCoroutine(generateFusionWord(apiUrl, words));
     }
 
-    void Start()
-    {
-        /*var payload = new Payload
-        {
-            mode = "preview",
-            prompt = "godzilla"
-        };
-
-        // Convertir l'objet en JSON
-        string payloadJSON = JsonUtility.ToJson(payload);
-
-        TaskID taskId = JsonUtility.FromJson<TaskID>(JsonUtility.ToJson(taskID));
-        Debug.Log(taskId.result);*/
-
-
+    void Start() { 
         // Generate with personalized words
         // string[] array = {"Vegeta","Son Goku"};
         // generateFusionObject(array);
@@ -255,7 +193,7 @@ public class APIManager : MonoBehaviour
         {
             Debug.Log("Object already have texture generated");
             yield return StartCoroutine(DownloadObjFromUrlRequest(furniture.pngUrl, furniture.name, ".png"));
-            instantiate3DObj(Application.dataPath + "/Objects/" + furniture.name + ".obj", Application.dataPath + "/Objects/" + furniture.name + ".png");
+            Utils.instantiate3DObj(Application.dataPath + "/Objects/" + furniture.name + ".obj", Application.dataPath + "/Objects/" + furniture.name + ".png", mainCamera);
         }
         
         /*
@@ -309,7 +247,7 @@ public class APIManager : MonoBehaviour
             yield return StartCoroutine(DownloadObjFromUrlRequest(furniture.pngUrl, furniture.name, ".png"));
         }
         Debug.Log("Just before instatiate textured object");
-        instantiate3DObj(Application.dataPath + "/Objects/" + furniture.name + ".obj", Application.dataPath + "/Objects/" + furniture.name + ".png");
+        Utils.instantiate3DObj(Application.dataPath + "/Objects/" + furniture.name + ".obj", Application.dataPath + "/Objects/" + furniture.name + ".png", mainCamera);
     }
 
     IEnumerator DownloadObjFromUrlRequest(string url, string name, string extention)
@@ -341,47 +279,9 @@ public class APIManager : MonoBehaviour
 
         if (extention == ".obj" && GameObject.Find(name) == null)
         {
-            instantiate3DObj(write_path);
+            Utils.instantiate3DObj(write_path, null, mainCamera);
         }
         Debug.Log(request.downloadHandler.text);
     }
-
-    void instantiate3DObj(string objPath, string pngPath = null)
-    {
-        // V�rifier si l'objet existe d�j� dans la sc�ne
-        string objectName = Path.GetFileNameWithoutExtension(objPath);
-        GameObject existingObj = GameObject.Find(objectName);
-
-        if (existingObj != null)
-        {
-            Debug.Log("L'objet existe d�j� dans la sc�ne : " + objectName);
-            if(pngPath != null)
-            {
-                Debug.Log("Adding texture to existing object");
-                AddTextureToObject(existingObj, pngPath);
-            }
-            return;
-        }
-
-        var loadedObj = new OBJLoader().Load(objPath);
-        if (loadedObj != null)
-        {
-            Debug.Log(objPath);
-            Debug.Log(pngPath);
-            if(pngPath != null)
-            {
-                Debug.Log("Adding texture to object");
-                AddTextureToObject(loadedObj, pngPath);
-            }
-            Debug.Log("Objet 3D instanci� : " + objectName);
-        }
-        else
-        {
-            Debug.LogError("Impossible de charger l'objet � partir du chemin sp�cifi�.");
-        }
-    }
-
-
-
 
 }

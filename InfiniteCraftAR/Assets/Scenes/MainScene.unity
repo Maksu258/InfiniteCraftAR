@@ -4386,6 +4386,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e971f6dfa5ed0942a3daa7112e65691, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mainCamera: {fileID: 1200492190}
   apiUrl: http://51.178.83.2/models/
 --- !u!224 &1346460783
 RectTransform:
@@ -5134,6 +5135,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e971f6dfa5ed0942a3daa7112e65691, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mainCamera: {fileID: 0}
   apiUrl: http://51.178.83.2/models/
 --- !u!224 &1581248213 stripped
 RectTransform:
@@ -5699,6 +5701,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36460ab0c9f378f478ccec73828bb2b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  camera: {fileID: 1200492190}
   assetButtonPrefab: {fileID: 2340416564190629140, guid: ed20bfaa4d9f4564a9867139503a2632, type: 3}
   contentPanel: {fileID: 1753637946}
   objectsFolderPath: Assets/Objects

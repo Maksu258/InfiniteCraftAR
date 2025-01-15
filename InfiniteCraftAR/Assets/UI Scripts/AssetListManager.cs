@@ -6,6 +6,10 @@ using TMPro;
 
 public class AssetListManager : MonoBehaviour
 {
+
+    public GameObject camera;       // Camera for spawning object
+
+
     [Header("UI Components")]
     public GameObject assetButtonPrefab;  // Prefab for asset buttons
     public Transform contentPanel;       // Parent container for buttons
@@ -49,11 +53,22 @@ public class AssetListManager : MonoBehaviour
             return;
         }
 
+        
+
         string[] files = Directory.GetFiles(folderPath, "*.obj", SearchOption.AllDirectories);
         foreach (string filePath in files)
         {
             string assetName = Path.GetFileNameWithoutExtension(filePath);
-            assets.Add(new Asset(assetName, filePath, isPermanent));
+            string pngFilePath = Path.Combine(Path.GetDirectoryName(filePath), assetName + ".png");
+            if (File.Exists(pngFilePath))
+            {
+                assets.Add(new Asset(assetName, filePath, pngFilePath, isPermanent)); // Charger la texture PNG si elle existe
+            }
+            else
+            {
+                assets.Add(new Asset(assetName, filePath, null, isPermanent));
+            }
+            
         }
     }
 
@@ -90,33 +105,7 @@ public class AssetListManager : MonoBehaviour
     void SpawnAsset(Asset asset)
     {
         Debug.Log($"Spawning asset: {asset.name}");
-
-        GameObject loadedObject = LoadObjFromFile(asset.path);
-        if (loadedObject != null)
-        {
-            Vector3 spawnPosition = new Vector3(0, 0, 0); // Adjust position as needed
-            Instantiate(loadedObject, spawnPosition, Quaternion.identity);
-        }
-        else
-        {
-            Debug.LogError($"Failed to load asset: {asset.name}");
-        }
-    }
-
-    // Load an OBJ file and return a GameObject
-    private GameObject LoadObjFromFile(string filePath)
-    {
-        if (File.Exists(filePath))
-        {
-            Debug.Log($"Loading OBJ file: {filePath}");
-            var objLoader = new Dummiesman.OBJLoader();
-            return objLoader.Load(filePath);
-        }
-        else
-        {
-            Debug.LogError($"File not found: {filePath}");
-            return null;
-        }
+        Utils.instantiate3DObj(asset.path, asset.texturePath, camera);
     }
 
     // Clear all non-permanent objects from the Objects folder
@@ -167,12 +156,14 @@ public class Asset
 {
     public string name; // Asset name
     public string path; // Path to the asset file
+    public string texturePath;
     public bool isPermanent; // Indicates if the asset is permanent
 
-    public Asset(string name, string path, bool isPermanent)
+    public Asset(string name, string path, string texturePath, bool isPermanent)
     {
         this.name = name;
         this.path = path;
+        this.texturePath = texturePath;
         this.isPermanent = isPermanent;
     }
 }
