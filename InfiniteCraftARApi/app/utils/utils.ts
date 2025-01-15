@@ -102,6 +102,7 @@ export function getCommonLabelsSummary(
 export async function generateFusionWord(word1: string, word2: string) {
   const urlInfiniteCraft = `https://infiniteback.org/pair?first=${word1}&second=${word2}`
 
+  logger.info('Url infinite craft: ' + urlInfiniteCraft)
   const response = await fetch(urlInfiniteCraft, { method: 'GET' })
 
   if (!response.ok) {
@@ -114,6 +115,7 @@ export async function generateFusionWord(word1: string, word2: string) {
   }
 
   const data: any = await response.json()
+  logger.info('Data infinite craft: ' + data)
   return data.result
 }
 
