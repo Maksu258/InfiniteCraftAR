@@ -2386,6 +2386,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Lynx Hand Menu
       objectReference: {fileID: 0}
+    - target: {fileID: 6535117128323495549, guid: a5897d5403982dd4c93c9493fdf7ae86, type: 3}
+      propertyPath: m_LeftHand
+      value: 
+      objectReference: {fileID: 1726860768}
+    - target: {fileID: 6535117128323495549, guid: a5897d5403982dd4c93c9493fdf7ae86, type: 3}
+      propertyPath: m_RightHand
+      value: 
+      objectReference: {fileID: 1588587966}
     - target: {fileID: 7988512842914530384, guid: a5897d5403982dd4c93c9493fdf7ae86, type: 3}
       propertyPath: m_RootOrder
       value: 4
