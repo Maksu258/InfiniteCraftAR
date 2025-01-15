@@ -146,7 +146,10 @@ export default class ModelsController {
     const result = countLabelOccurrences(rekognitionLabels, clarifaiLabels, api4aiLabels)
     logger.info('Result analysis image : ' + result)
     logger.info('========================================')
-    return response.status(200).send(result.slice(0, 2))
+    const filteredResult = result.filter(
+      (label: string) => label !== 'outdoors' && label !== 'architecture'
+    )
+    return response.status(200).send(filteredResult.slice(0, 2))
   }
 
   public async generateFusionWord({ request, response }: HttpContext) {
