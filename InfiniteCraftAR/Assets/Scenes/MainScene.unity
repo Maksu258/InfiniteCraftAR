@@ -526,7 +526,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 507606536}
+    m_TransformParent: {fileID: 724876781}
     m_Modifications:
     - target: {fileID: 2359535708233873479, guid: 7a0d9ac980e2f9848bddd7ef85fe2b2d, type: 3}
       propertyPath: useTheme
@@ -618,15 +618,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6676715249231737485, guid: 7a0d9ac980e2f9848bddd7ef85fe2b2d, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1000
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6676715249231737485, guid: 7a0d9ac980e2f9848bddd7ef85fe2b2d, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1000
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6676715249231737485, guid: 7a0d9ac980e2f9848bddd7ef85fe2b2d, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1000
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6676715249231737485, guid: 7a0d9ac980e2f9848bddd7ef85fe2b2d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -658,11 +658,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6676715249231737485, guid: 7a0d9ac980e2f9848bddd7ef85fe2b2d, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -245.59999
+      value: -0.1792
       objectReference: {fileID: 0}
     - target: {fileID: 6676715249231737485, guid: 7a0d9ac980e2f9848bddd7ef85fe2b2d, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 172.79996
+      value: 0.14578247
       objectReference: {fileID: 0}
     - target: {fileID: 6676715249231737485, guid: 7a0d9ac980e2f9848bddd7ef85fe2b2d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1039,7 +1039,6 @@ RectTransform:
   m_LocalScale: {x: 0.001, y: 0.001, z: 0.001}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1800596770}
   - {fileID: 393598404}
   m_Father: {fileID: 724876781}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1453,6 +1452,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6901087677220589436, guid: 79f3dfd3f0a52384a9d9306ee831c775, type: 3}
       insertIndex: -1
       addedObject: {fileID: 901712401}
+    - targetCorrespondingSourceObject: {fileID: 6901087677220589436, guid: 79f3dfd3f0a52384a9d9306ee831c775, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1800596770}
     - targetCorrespondingSourceObject: {fileID: 6901087677220589436, guid: 79f3dfd3f0a52384a9d9306ee831c775, type: 3}
       insertIndex: -1
       addedObject: {fileID: 507606536}
